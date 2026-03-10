@@ -2,15 +2,21 @@
 
 A sleek card explorer for **Magic: The Gathering**, powered by the Scryfall API.
 
-Search cards, browse sets, and dive into detailed card data including oracle text, legalities, rulings, and prices.
+Search cards, browse sets, and dive into detailed card data including oracle text, legalities, rulings, and pr
 
-## Screenshot
+### Screenshots
 
-Add a screenshot of the app here:
+#### Sets
 
-![ScryMagic App Screenshot](public/screenshot.png)
+![ScryMagic App Screenshot](docs/images/sets.png)
 
-If your screenshot uses a different filename, update the path above.
+#### Search
+
+![ScryMagic App Screenshot](docs/images/search.png)
+
+#### Details Page
+
+![ScryMagic App Screenshot](docs/images/details.png)
 
 ## Features
 
