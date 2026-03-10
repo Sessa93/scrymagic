@@ -1,26 +1,112 @@
 @import "tailwindcss";
 
+/* Magic: The Gathering inspired palette */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+  --foreground: #f5e9c6;
+  --card-bg: linear-gradient(120deg, #2e1a09 0%, #3a2c1a 100%);
+  --card-border: #d4af37;
+  --accent: #b97a56;
+  --accent-hover: #d4af37;
+  --muted: #c2b280;
+  --input-bg: #2c2c2c;
+  --input-border: #d4af37;
+  --surface: #3a2c1a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-muted: var(--muted);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-surface: var(--surface);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Beleren', Arial, Helvetica, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Card effect */
+.mtg-card {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 24px #000a, 0 0 0 4px var(--card-border);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtly reduce rounded corners app-wide */
+:root {
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+}
+
+/* Override common Tailwind rounded utilities with smaller radii */
+.rounded { border-radius: var(--radius-md) !important; }
+.rounded-sm { border-radius: var(--radius-sm) !important; }
+.rounded-md { border-radius: var(--radius-md) !important; }
+.rounded-lg { border-radius: var(--radius-lg) !important; }
+.rounded-xl { border-radius: var(--radius-xl) !important; }
+.rounded-2xl { border-radius: var(--radius-2xl) !important; }
+.rounded-3xl { border-radius: var(--radius-3xl) !important; }
+
+/* Directional rounded overrides to normalize inputs/buttons with split corners */
+.rounded-l-sm { border-top-left-radius: var(--radius-sm) !important; border-bottom-left-radius: var(--radius-sm) !important; }
+.rounded-l-md { border-top-left-radius: var(--radius-md) !important; border-bottom-left-radius: var(--radius-md) !important; }
+.rounded-l-lg { border-top-left-radius: var(--radius-lg) !important; border-bottom-left-radius: var(--radius-lg) !important; }
+.rounded-l-xl { border-top-left-radius: var(--radius-xl) !important; border-bottom-left-radius: var(--radius-xl) !important; }
+.rounded-l-2xl { border-top-left-radius: var(--radius-2xl) !important; border-bottom-left-radius: var(--radius-2xl) !important; }
+
+.rounded-r-sm { border-top-right-radius: var(--radius-sm) !important; border-bottom-right-radius: var(--radius-sm) !important; }
+.rounded-r-md { border-top-right-radius: var(--radius-md) !important; border-bottom-right-radius: var(--radius-md) !important; }
+.rounded-r-lg { border-top-right-radius: var(--radius-lg) !important; border-bottom-right-radius: var(--radius-lg) !important; }
+.rounded-r-xl { border-top-right-radius: var(--radius-xl) !important; border-bottom-right-radius: var(--radius-xl) !important; }
+.rounded-r-2xl { border-top-right-radius: var(--radius-2xl) !important; border-bottom-right-radius: var(--radius-2xl) !important; }
+
+.rounded-t-sm { border-top-left-radius: var(--radius-sm) !important; border-top-right-radius: var(--radius-sm) !important; }
+.rounded-t-md { border-top-left-radius: var(--radius-md) !important; border-top-right-radius: var(--radius-md) !important; }
+.rounded-t-lg { border-top-left-radius: var(--radius-lg) !important; border-top-right-radius: var(--radius-lg) !important; }
+.rounded-t-xl { border-top-left-radius: var(--radius-xl) !important; border-top-right-radius: var(--radius-xl) !important; }
+.rounded-t-2xl { border-top-left-radius: var(--radius-2xl) !important; border-top-right-radius: var(--radius-2xl) !important; }
+
+.rounded-b-sm { border-bottom-left-radius: var(--radius-sm) !important; border-bottom-right-radius: var(--radius-sm) !important; }
+.rounded-b-md { border-bottom-left-radius: var(--radius-md) !important; border-bottom-right-radius: var(--radius-md) !important; }
+.rounded-b-lg { border-bottom-left-radius: var(--radius-lg) !important; border-bottom-right-radius: var(--radius-lg) !important; }
+.rounded-b-xl { border-bottom-left-radius: var(--radius-xl) !important; border-bottom-right-radius: var(--radius-xl) !important; }
+.rounded-b-2xl { border-bottom-left-radius: var(--radius-2xl) !important; border-bottom-right-radius: var(--radius-2xl) !important; }
+
+/* Gold text for rarity */
+.mtg-gold {
+  color: #d4af37;
+  text-shadow: 0 1px 2px #000a;
 }

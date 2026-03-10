@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ScryMagic
+
+A sleek card explorer for **Magic: The Gathering**, powered by the Scryfall API.
+
+Search cards, browse sets, and dive into detailed card data including oracle text, legalities, rulings, and prices.
+
+## Screenshot
+
+Add a screenshot of the app here:
+
+![ScryMagic App Screenshot](public/screenshot.png)
+
+If your screenshot uses a different filename, update the path above.
+
+## Features
+
+- Fast full-text card search with pagination
+- Rich card detail pages with mana symbols and rarity coloring
+- Rulings, legalities, and market pricing data
+- Set browser with filter + keyboard-friendly navigation
+- Responsive layout for desktop and mobile
+- Server-side fetching with Next.js App Router
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Scryfall API
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Start development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000> in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Available Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - Start local development server
+- `npm run build` - Build for production
+- `npm run start` - Run production build locally
+- `npm run lint` - Run ESLint
 
-## Learn More
+## Project Routes
 
-To learn more about Next.js, take a look at the following resources:
+- `/` - Home page with global search and set sidebar
+- `/search?q=<query>` - Search results
+- `/card/[id]` - Card details
+- `/set/[code]` - Cards from a specific set
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Data Source
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+ScryMagic uses the public [Scryfall API](https://scryfall.com/docs/api) for card and set data.
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy anywhere that supports Next.js. Vercel is the quickest option.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+npm run start
+```
+
+## License
+
+This project is for educational/personal use. Review Scryfall's API terms before commercial use.
