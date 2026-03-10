@@ -79,10 +79,23 @@ export interface ScryfallRuling {
 
 const BASE_URL = "https://api.scryfall.com";
 
-export async function scryfall<T>(path: string): Promise<T> {
+export async function scryfall<T>(
+  path: string,
+  options?: { revalidate?: number; cache?: RequestCache },
+): Promise<T> {
+  const isNoStore = options?.cache === "no-store";
+
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { Accept: "application/json" },
-    next: { revalidate: 3600 }, // cache for 1 hour
+    ...(options?.cache ? { cache: options.cache } : {}),
+    ...(!isNoStore
+      ? {
+          next: {
+            revalidate:
+              options?.revalidate !== undefined ? options.revalidate : 3600,
+          },
+        }
+      : {}),
   });
 
   if (!res.ok) {
@@ -116,7 +129,7 @@ export async function getCardRulings(
 }
 
 export async function getRandomCard(): Promise<ScryfallCard> {
-  return scryfall<ScryfallCard>("/cards/random");
+  return scryfall<ScryfallCard>("/cards/random", { cache: "no-store" });
 }
 
 export async function autocomplete(query: string): Promise<{ data: string[] }> {
