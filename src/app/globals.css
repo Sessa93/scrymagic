@@ -2,16 +2,21 @@
 
 /* Magic: The Gathering inspired palette */
 :root {
-  --background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
-  --foreground: #f5e9c6;
-  --card-bg: linear-gradient(120deg, #2e1a09 0%, #3a2c1a 100%);
-  --card-border: #d4af37;
-  --accent: #b97a56;
-  --accent-hover: #d4af37;
-  --muted: #c2b280;
-  --input-bg: #2c2c2c;
-  --input-border: #d4af37;
-  --surface: #3a2c1a;
+  --background: radial-gradient(
+    circle at 12% 8%,
+    #2f1f0f 0%,
+    #161311 34%,
+    #0e0d0d 100%
+  );
+  --foreground: #f2e7cf;
+  --card-bg: linear-gradient(145deg, #2a2016 0%, #201812 58%, #1a130f 100%);
+  --card-border: #8d6b43;
+  --accent: #c88d3b;
+  --accent-hover: #dfae63;
+  --muted: #b7a487;
+  --input-bg: #1e1713;
+  --input-border: #9a7345;
+  --surface: #2b2119;
 }
 
 @theme inline {
@@ -32,7 +37,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), 'Beleren', Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Beleren", Arial, Helvetica, sans-serif;
   letter-spacing: 0.02em;
 }
 
@@ -55,7 +60,9 @@ body {
   background: var(--card-bg);
   border: 2px solid var(--card-border);
   border-radius: 6px;
-  box-shadow: 0 4px 24px #000a, 0 0 0 4px var(--card-border);
+  box-shadow:
+    0 4px 24px #000a,
+    0 0 0 4px var(--card-border);
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
@@ -72,38 +79,112 @@ body {
 }
 
 /* Override common Tailwind rounded utilities with smaller radii */
-.rounded { border-radius: var(--radius-md) !important; }
-.rounded-sm { border-radius: var(--radius-sm) !important; }
-.rounded-md { border-radius: var(--radius-md) !important; }
-.rounded-lg { border-radius: var(--radius-lg) !important; }
-.rounded-xl { border-radius: var(--radius-xl) !important; }
-.rounded-2xl { border-radius: var(--radius-2xl) !important; }
-.rounded-3xl { border-radius: var(--radius-3xl) !important; }
+.rounded {
+  border-radius: var(--radius-md) !important;
+}
+.rounded-sm {
+  border-radius: var(--radius-sm) !important;
+}
+.rounded-md {
+  border-radius: var(--radius-md) !important;
+}
+.rounded-lg {
+  border-radius: var(--radius-lg) !important;
+}
+.rounded-xl {
+  border-radius: var(--radius-xl) !important;
+}
+.rounded-2xl {
+  border-radius: var(--radius-2xl) !important;
+}
+.rounded-3xl {
+  border-radius: var(--radius-3xl) !important;
+}
 
 /* Directional rounded overrides to normalize inputs/buttons with split corners */
-.rounded-l-sm { border-top-left-radius: var(--radius-sm) !important; border-bottom-left-radius: var(--radius-sm) !important; }
-.rounded-l-md { border-top-left-radius: var(--radius-md) !important; border-bottom-left-radius: var(--radius-md) !important; }
-.rounded-l-lg { border-top-left-radius: var(--radius-lg) !important; border-bottom-left-radius: var(--radius-lg) !important; }
-.rounded-l-xl { border-top-left-radius: var(--radius-xl) !important; border-bottom-left-radius: var(--radius-xl) !important; }
-.rounded-l-2xl { border-top-left-radius: var(--radius-2xl) !important; border-bottom-left-radius: var(--radius-2xl) !important; }
+.rounded-l-sm {
+  border-top-left-radius: var(--radius-sm) !important;
+  border-bottom-left-radius: var(--radius-sm) !important;
+}
+.rounded-l-md {
+  border-top-left-radius: var(--radius-md) !important;
+  border-bottom-left-radius: var(--radius-md) !important;
+}
+.rounded-l-lg {
+  border-top-left-radius: var(--radius-lg) !important;
+  border-bottom-left-radius: var(--radius-lg) !important;
+}
+.rounded-l-xl {
+  border-top-left-radius: var(--radius-xl) !important;
+  border-bottom-left-radius: var(--radius-xl) !important;
+}
+.rounded-l-2xl {
+  border-top-left-radius: var(--radius-2xl) !important;
+  border-bottom-left-radius: var(--radius-2xl) !important;
+}
 
-.rounded-r-sm { border-top-right-radius: var(--radius-sm) !important; border-bottom-right-radius: var(--radius-sm) !important; }
-.rounded-r-md { border-top-right-radius: var(--radius-md) !important; border-bottom-right-radius: var(--radius-md) !important; }
-.rounded-r-lg { border-top-right-radius: var(--radius-lg) !important; border-bottom-right-radius: var(--radius-lg) !important; }
-.rounded-r-xl { border-top-right-radius: var(--radius-xl) !important; border-bottom-right-radius: var(--radius-xl) !important; }
-.rounded-r-2xl { border-top-right-radius: var(--radius-2xl) !important; border-bottom-right-radius: var(--radius-2xl) !important; }
+.rounded-r-sm {
+  border-top-right-radius: var(--radius-sm) !important;
+  border-bottom-right-radius: var(--radius-sm) !important;
+}
+.rounded-r-md {
+  border-top-right-radius: var(--radius-md) !important;
+  border-bottom-right-radius: var(--radius-md) !important;
+}
+.rounded-r-lg {
+  border-top-right-radius: var(--radius-lg) !important;
+  border-bottom-right-radius: var(--radius-lg) !important;
+}
+.rounded-r-xl {
+  border-top-right-radius: var(--radius-xl) !important;
+  border-bottom-right-radius: var(--radius-xl) !important;
+}
+.rounded-r-2xl {
+  border-top-right-radius: var(--radius-2xl) !important;
+  border-bottom-right-radius: var(--radius-2xl) !important;
+}
 
-.rounded-t-sm { border-top-left-radius: var(--radius-sm) !important; border-top-right-radius: var(--radius-sm) !important; }
-.rounded-t-md { border-top-left-radius: var(--radius-md) !important; border-top-right-radius: var(--radius-md) !important; }
-.rounded-t-lg { border-top-left-radius: var(--radius-lg) !important; border-top-right-radius: var(--radius-lg) !important; }
-.rounded-t-xl { border-top-left-radius: var(--radius-xl) !important; border-top-right-radius: var(--radius-xl) !important; }
-.rounded-t-2xl { border-top-left-radius: var(--radius-2xl) !important; border-top-right-radius: var(--radius-2xl) !important; }
+.rounded-t-sm {
+  border-top-left-radius: var(--radius-sm) !important;
+  border-top-right-radius: var(--radius-sm) !important;
+}
+.rounded-t-md {
+  border-top-left-radius: var(--radius-md) !important;
+  border-top-right-radius: var(--radius-md) !important;
+}
+.rounded-t-lg {
+  border-top-left-radius: var(--radius-lg) !important;
+  border-top-right-radius: var(--radius-lg) !important;
+}
+.rounded-t-xl {
+  border-top-left-radius: var(--radius-xl) !important;
+  border-top-right-radius: var(--radius-xl) !important;
+}
+.rounded-t-2xl {
+  border-top-left-radius: var(--radius-2xl) !important;
+  border-top-right-radius: var(--radius-2xl) !important;
+}
 
-.rounded-b-sm { border-bottom-left-radius: var(--radius-sm) !important; border-bottom-right-radius: var(--radius-sm) !important; }
-.rounded-b-md { border-bottom-left-radius: var(--radius-md) !important; border-bottom-right-radius: var(--radius-md) !important; }
-.rounded-b-lg { border-bottom-left-radius: var(--radius-lg) !important; border-bottom-right-radius: var(--radius-lg) !important; }
-.rounded-b-xl { border-bottom-left-radius: var(--radius-xl) !important; border-bottom-right-radius: var(--radius-xl) !important; }
-.rounded-b-2xl { border-bottom-left-radius: var(--radius-2xl) !important; border-bottom-right-radius: var(--radius-2xl) !important; }
+.rounded-b-sm {
+  border-bottom-left-radius: var(--radius-sm) !important;
+  border-bottom-right-radius: var(--radius-sm) !important;
+}
+.rounded-b-md {
+  border-bottom-left-radius: var(--radius-md) !important;
+  border-bottom-right-radius: var(--radius-md) !important;
+}
+.rounded-b-lg {
+  border-bottom-left-radius: var(--radius-lg) !important;
+  border-bottom-right-radius: var(--radius-lg) !important;
+}
+.rounded-b-xl {
+  border-bottom-left-radius: var(--radius-xl) !important;
+  border-bottom-right-radius: var(--radius-xl) !important;
+}
+.rounded-b-2xl {
+  border-bottom-left-radius: var(--radius-2xl) !important;
+  border-bottom-right-radius: var(--radius-2xl) !important;
+}
 
 /* Gold text for rarity */
 .mtg-gold {

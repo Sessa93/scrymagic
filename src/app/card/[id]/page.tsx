@@ -1,7 +1,13 @@
-import { getCardById, getCardRulings, getCardImage, formatManaCost, getRarityColor } from "@/lib/scryfall";
+import {
+  getCardById,
+  getCardRulings,
+  getCardImage,
+  formatManaCost,
+} from "@/lib/scryfall";
 import Image from "next/image";
-import Link from "next/link";
 import ManaSymbol from "@/components/ManaSymbol";
+import RarityBadge from "@/components/RarityBadge";
+import BackToResultsButton from "@/components/BackToResultsButton";
 import { notFound } from "next/navigation";
 
 interface CardPageProps {
@@ -26,9 +32,8 @@ export default async function CardPage({ params }: CardPageProps) {
     // Rulings may not be available
   }
 
-  const imageUrl = getCardImage(card, "large");
+  const imageUrl = getCardImage(card, "png");
   const manaSymbols = formatManaCost(card.mana_cost);
-  const rarityColor = getRarityColor(card.rarity);
 
   // Get oracle text from main card or first face
   const oracleText =
@@ -43,45 +48,40 @@ export default async function CardPage({ params }: CardPageProps) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <Link
-        href="javascript:history.back()"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-accent transition-colors"
-      >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-          <path d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to results
-      </Link>
+      <BackToResultsButton />
 
       <div className="grid gap-8 md:grid-cols-[380px_1fr]">
         {/* Card Image */}
         <div className="flex flex-col items-center gap-4">
           {imageUrl ? (
-            <div className="overflow-hidden rounded-xl shadow-2xl">
+            <div className="overflow-hidden rounded-md bg-surface shadow-2xl">
               <Image
                 src={imageUrl}
                 alt={card.name}
                 width={380}
                 height={530}
-                className="w-full"
+                className="block w-full rounded-md"
                 priority
               />
             </div>
           ) : (
-            <div className="flex h-[530px] w-[380px] items-center justify-center rounded-xl bg-surface text-muted">
+            <div className="flex h-132.5 w-95 items-center justify-center rounded-xl bg-surface text-muted">
               No image available
             </div>
           )}
 
           {/* Second face for double-faced cards */}
           {card.card_faces && card.card_faces[1]?.image_uris && (
-            <div className="overflow-hidden rounded-xl shadow-2xl">
+            <div className="overflow-hidden rounded-md bg-surface shadow-2xl">
               <Image
-                src={card.card_faces[1].image_uris.large}
+                src={
+                  card.card_faces[1].image_uris.png ||
+                  card.card_faces[1].image_uris.large
+                }
                 alt={card.card_faces[1].name}
                 width={380}
                 height={530}
-                className="w-full"
+                className="block w-full rounded-md"
               />
             </div>
           )}
@@ -149,13 +149,10 @@ export default async function CardPage({ params }: CardPageProps) {
                 value={`${card.power} / ${card.toughness}`}
               />
             )}
-            {card.loyalty && (
-              <InfoCard label="Loyalty" value={card.loyalty} />
-            )}
+            {card.loyalty && <InfoCard label="Loyalty" value={card.loyalty} />}
             <InfoCard
               label="Rarity"
-              value={card.rarity}
-              valueColor={rarityColor}
+              valueNode={<RarityBadge rarity={card.rarity} />}
             />
             <InfoCard label="Set" value={card.set_name} />
             {card.collector_number && (
@@ -168,10 +165,7 @@ export default async function CardPage({ params }: CardPageProps) {
             {card.released_at && (
               <InfoCard label="Released" value={card.released_at} />
             )}
-            <InfoCard
-              label="CMC"
-              value={card.cmc.toString()}
-            />
+            <InfoCard label="CMC" value={card.cmc.toString()} />
           </div>
 
           {/* Keywords */}
@@ -184,7 +178,7 @@ export default async function CardPage({ params }: CardPageProps) {
                 {card.keywords.map((kw) => (
                   <span
                     key={kw}
-                    className="rounded-full border border-card-border bg-surface px-3 py-1 text-xs font-medium text-foreground"
+                    className="rounded-sm border border-card-border bg-surface px-3 py-1 text-xs font-medium text-foreground"
                   >
                     {kw}
                   </span>
@@ -208,17 +202,11 @@ export default async function CardPage({ params }: CardPageProps) {
                     {format.replace(/_/g, " ")}
                   </span>
                   <span
-                    className={`text-xs font-semibold ${
-                      status === "legal"
-                        ? "text-green-400"
-                        : status === "banned"
-                          ? "text-red-400"
-                          : status === "restricted"
-                            ? "text-yellow-400"
-                            : "text-gray-500"
-                    }`}
+                    className={`inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getLegalityBadgeClass(
+                      status,
+                    )}`}
                   >
-                    {status === "not_legal" ? "Not Legal" : status}
+                    {formatLegalityLabel(status)}
                   </span>
                 </div>
               ))}
@@ -236,10 +224,7 @@ export default async function CardPage({ params }: CardPageProps) {
                   <PriceBadge label="USD" value={`$${card.prices.usd}`} />
                 )}
                 {card.prices.usd_foil && (
-                  <PriceBadge
-                    label="Foil"
-                    value={`$${card.prices.usd_foil}`}
-                  />
+                  <PriceBadge label="Foil" value={`$${card.prices.usd_foil}`} />
                 )}
                 {card.prices.eur && (
                   <PriceBadge label="EUR" value={`€${card.prices.eur}`} />
@@ -283,30 +268,47 @@ export default async function CardPage({ params }: CardPageProps) {
 function InfoCard({
   label,
   value,
-  valueColor,
+  valueNode,
 }: {
   label: string;
-  value: string;
-  valueColor?: string;
+  value?: string;
+  valueNode?: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl border border-card-border bg-card-bg p-3">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted">
         {label}
       </p>
-      <p
-        className="mt-0.5 text-sm font-medium capitalize"
-        style={valueColor ? { color: valueColor } : undefined}
-      >
-        {value}
-      </p>
+      {valueNode ? (
+        <div className="mt-1">{valueNode}</div>
+      ) : (
+        <p className="mt-0.5 text-sm font-medium capitalize">{value}</p>
+      )}
     </div>
   );
 }
 
+function formatLegalityLabel(status: string): string {
+  if (status === "not_legal") return "Not Legal";
+  return status;
+}
+
+function getLegalityBadgeClass(status: string): string {
+  if (status === "legal") {
+    return "bg-emerald-500/20 text-emerald-200 ring-1 ring-inset ring-emerald-400/60";
+  }
+  if (status === "restricted") {
+    return "bg-amber-500/20 text-amber-200 ring-1 ring-inset ring-amber-400/60";
+  }
+  if (status === "banned") {
+    return "bg-red-500/20 text-red-200 ring-1 ring-inset ring-red-400/60";
+  }
+  return "bg-zinc-500/20 text-zinc-300 ring-1 ring-inset ring-zinc-400/50";
+}
+
 function PriceBadge({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-card-border bg-card-bg px-4 py-2">
+    <div className="rounded-sm border border-card-border bg-card-bg px-4 py-2">
       <span className="text-xs text-muted">{label}</span>
       <span className="ml-2 text-sm font-bold text-green-400">{value}</span>
     </div>

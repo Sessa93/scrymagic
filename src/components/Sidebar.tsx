@@ -86,6 +86,8 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
         params.delete("setFilter");
       }
       const qs = params.toString();
+      const currentQs = searchParams.toString();
+      if (qs === currentQs) return;
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     }, 250);
     return () => clearTimeout(t);
@@ -117,21 +119,24 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
     const q = filter.trim().toLowerCase();
     if (!q) return sets;
     return sets.filter(
-      (s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+      (s) =>
+        s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q),
     );
   }, [filter, sets]);
 
   // Compact number formatter for tight badges
   const nfCompact = useMemo(
     () => new Intl.NumberFormat(undefined, { notation: "compact" }),
-    []
+    [],
   );
 
   // Manage roving focus index based on selected set or first filtered item
   useEffect(() => {
     const idx = filteredSets.findIndex((s) => s.code === selectedSet);
     const nextIdx = idx >= 0 ? idx : filteredSets.length > 0 ? 0 : -1;
-    setFocusIdx((prev) => (prev === -1 ? nextIdx : Math.min(prev, filteredSets.length - 1)));
+    setFocusIdx((prev) =>
+      prev === -1 ? nextIdx : Math.min(prev, filteredSets.length - 1),
+    );
   }, [filteredSets, selectedSet]);
 
   const setListRef = (el: HTMLAnchorElement | null, i: number) => {
@@ -139,7 +144,8 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
   };
 
   const moveFocus = (i: number) => {
-    const clamped = ((i % filteredSets.length) + filteredSets.length) % filteredSets.length;
+    const clamped =
+      ((i % filteredSets.length) + filteredSets.length) % filteredSets.length;
     setFocusIdx(clamped);
     const el = listRefs.current[clamped];
     el?.focus();
@@ -217,42 +223,76 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
       ref={asideRef}
     >
       <div ref={controlsRef}>
-        <div className={`mb-3 flex items-center ${open ? "justify-between" : "justify-center"}`}>
-        {open ? (
-          <div className="flex items-center gap-2">
-            {/* Deck/stack icon */}
-            <svg viewBox="0 0 24 24" className="h-6 w-6 text-accent" aria-hidden="true">
-              <path fill="currentColor" d="M7.5 4.5 15 2.8a2 2 0 0 1 2.4 1.5l1.7 7.5a2 2 0 0 1-1.5 2.4l-7.5 1.7a2 2 0 0 1-2.4-1.5L6 6.9a2 2 0 0 1 1.5-2.4Z" opacity=".25" />
-              <path fill="currentColor" d="M5.6 8.6 13 6.9a2 2 0 0 1 2.4 1.5l1.7 7.5a2 2 0 0 1-1.5 2.4l-7.5 1.7A2 2 0 0 1 5.6 19L3.9 11.6A2 2 0 0 1 5.6 8.6Z" />
-            </svg>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">Sets</h2>
-          </div>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setOpenPref((v) => !v)}
-          aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
-          className="rounded-md border border-card-border bg-surface p-1.5 text-muted hover:text-foreground hover:border-accent transition-colors"
+        <div
+          className={`mb-3 flex items-center ${open ? "justify-between" : "justify-center"}`}
         >
           {open ? (
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M15 19l-7-7 7-7" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          )}
-        </button>
+            <div className="flex items-center gap-2">
+              {/* Deck/stack icon */}
+              <svg
+                viewBox="0 0 24 24"
+                className="h-6 w-6 text-accent"
+                aria-hidden="true"
+              >
+                <path
+                  fill="currentColor"
+                  d="M7.5 4.5 15 2.8a2 2 0 0 1 2.4 1.5l1.7 7.5a2 2 0 0 1-1.5 2.4l-7.5 1.7a2 2 0 0 1-2.4-1.5L6 6.9a2 2 0 0 1 1.5-2.4Z"
+                  opacity=".25"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.6 8.6 13 6.9a2 2 0 0 1 2.4 1.5l1.7 7.5a2 2 0 0 1-1.5 2.4l-7.5 1.7A2 2 0 0 1 5.6 19L3.9 11.6A2 2 0 0 1 5.6 8.6Z"
+                />
+              </svg>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted">
+                Sets
+              </h2>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setOpenPref((v) => !v)}
+            aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+            className="rounded-md border border-card-border bg-surface p-1.5 text-muted hover:text-foreground hover:border-accent transition-colors"
+          >
+            {open ? (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path d="M15 19l-7-7 7-7" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {open ? (
           <div className="mb-3">
-            <label htmlFor="set-filter" className="sr-only">Filter sets</label>
+            <label htmlFor="set-filter" className="sr-only">
+              Filter sets
+            </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-muted">
                 <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                  <path fill="currentColor" d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm8.7 12.3-3.2-3.2a8 8 0 1 0-1.4 1.4l3.2 3.2a1 1 0 0 0 1.4-1.4Z" />
+                  <path
+                    fill="currentColor"
+                    d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm8.7 12.3-3.2-3.2a8 8 0 1 0-1.4 1.4l3.2 3.2a1 1 0 0 0 1.4-1.4Z"
+                  />
                 </svg>
               </span>
               <input
@@ -290,11 +330,11 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
                 <img
                   src={set.icon_svg_uri}
                   alt={set.name}
-                  className="h-4 w-4"
+                  className="h-4 w-4 brightness-0 invert opacity-85 group-hover:opacity-100"
                 />
                 {!open ? (
                   <span
-                    className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
+                    className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-sm bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
                     aria-hidden="true"
                     title={`${set.card_count} cards`}
                   >
@@ -306,7 +346,7 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
                 <>
                   <span className="truncate flex-1">{set.name}</span>
                   <span
-                    className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    className={`ml-auto inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
                       selectedSet === set.code
                         ? "bg-accent text-white"
                         : "bg-surface text-muted ring-1 ring-inset ring-card-border"

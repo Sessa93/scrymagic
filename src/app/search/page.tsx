@@ -1,5 +1,5 @@
 import { searchCards } from "@/lib/scryfall";
-import CardGrid from "@/components/CardGrid";
+import SortableCardGrid from "@/components/SortableCardGrid";
 import Link from "next/link";
 
 interface SearchPageProps {
@@ -60,7 +60,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </h1>
       </div>
 
-      <CardGrid cards={results.data} />
+      <SortableCardGrid cards={results.data} />
 
       {/* Pagination */}
       <div className="mt-8 flex items-center justify-center gap-4 pb-8">

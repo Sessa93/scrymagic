@@ -88,7 +88,7 @@ export async function scryfall<T>(path: string): Promise<T> {
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
     throw new Error(
-      error.details || `Scryfall API error: ${res.status} ${res.statusText}`
+      error.details || `Scryfall API error: ${res.status} ${res.statusText}`,
     );
   }
 
@@ -97,11 +97,11 @@ export async function scryfall<T>(path: string): Promise<T> {
 
 export async function searchCards(
   query: string,
-  page: number = 1
+  page: number = 1,
 ): Promise<ScryfallSearchResult> {
   const encoded = encodeURIComponent(query);
   return scryfall<ScryfallSearchResult>(
-    `/cards/search?q=${encoded}&page=${page}`
+    `/cards/search?q=${encoded}&page=${page}`,
   );
 }
 
@@ -109,7 +109,9 @@ export async function getCardById(id: string): Promise<ScryfallCard> {
   return scryfall<ScryfallCard>(`/cards/${id}`);
 }
 
-export async function getCardRulings(id: string): Promise<{ data: ScryfallRuling[] }> {
+export async function getCardRulings(
+  id: string,
+): Promise<{ data: ScryfallRuling[] }> {
   return scryfall<{ data: ScryfallRuling[] }>(`/cards/${id}/rulings`);
 }
 
@@ -117,14 +119,15 @@ export async function getRandomCard(): Promise<ScryfallCard> {
   return scryfall<ScryfallCard>("/cards/random");
 }
 
-export async function autocomplete(
-  query: string
-): Promise<{ data: string[] }> {
+export async function autocomplete(query: string): Promise<{ data: string[] }> {
   const encoded = encodeURIComponent(query);
   return scryfall<{ data: string[] }>(`/cards/autocomplete?q=${encoded}`);
 }
 
-export function getCardImage(card: ScryfallCard, size: "small" | "normal" | "large" | "art_crop" = "normal"): string {
+export function getCardImage(
+  card: ScryfallCard,
+  size: "small" | "normal" | "large" | "png" | "art_crop" = "normal",
+): string {
   if (card.image_uris) {
     return card.image_uris[size];
   }

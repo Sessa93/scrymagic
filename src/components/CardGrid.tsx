@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ScryfallCard, getCardImage, getRarityColor } from "@/lib/scryfall";
+import { ScryfallCard, getCardImage } from "@/lib/scryfall";
+import RarityBadge from "@/components/RarityBadge";
 
 interface CardGridProps {
   cards: ScryfallCard[];
@@ -8,7 +9,7 @@ interface CardGridProps {
 
 export default function CardGrid({ cards }: CardGridProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {cards.map((card) => (
         <CardGridItem key={card.id} card={card} />
       ))}
@@ -17,21 +18,20 @@ export default function CardGrid({ cards }: CardGridProps) {
 }
 
 function CardGridItem({ card }: { card: ScryfallCard }) {
-  const imageUrl = getCardImage(card, "normal");
-  const rarityColor = getRarityColor(card.rarity);
+  const imageUrl = getCardImage(card, "png");
 
   return (
     <Link
       href={`/card/${card.id}`}
-      className="group relative overflow-hidden rounded-xl border border-card-border bg-card-bg transition-all hover:border-accent hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-1"
+      className="group relative overflow-hidden rounded-xl bg-transparent transition-all hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-1"
     >
-      <div className="aspect-[488/680] w-full overflow-hidden">
+      <div className="aspect-488/680 w-full overflow-hidden bg-transparent">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={card.name}
-            width={244}
-            height={340}
+            width={200}
+            height={279}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (
@@ -46,12 +46,7 @@ function CardGridItem({ card }: { card: ScryfallCard }) {
         </p>
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-muted truncate">{card.set_name}</span>
-          <span
-            className="text-xs font-medium capitalize"
-            style={{ color: rarityColor }}
-          >
-            {card.rarity}
-          </span>
+          <RarityBadge rarity={card.rarity} compact />
         </div>
       </div>
     </Link>
