@@ -68,6 +68,12 @@ export interface ScryfallSet {
   released_at?: string;
   card_count: number;
   icon_svg_uri: string;
+  parent_set_code?: string;
+  block_code?: string;
+  block?: string;
+  printed_size?: number;
+  digital?: boolean;
+  scryfall_uri?: string;
 }
 
 export interface ScryfallRuling {

@@ -114,6 +114,23 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
   // Effective open state considers small screens
   const open = !isSmall && openPref;
 
+  // Build set hierarchy: organize sets by parent
+  const setHierarchy = useMemo(() => {
+    const byCode = new Map(sets.map((s) => [s.code, s]));
+    const withParent = sets.filter(
+      (s) => s.parent_set_code && byCode.has(s.parent_set_code),
+    );
+    const parentCodes = new Set(withParent.map((s) => s.parent_set_code));
+    const parents = sets.filter(
+      (s) => parentCodes.has(s.code) && !s.parent_set_code,
+    );
+    const orphans = sets.filter(
+      (s) => !s.parent_set_code && !parentCodes.has(s.code),
+    );
+
+    return { parents, orphans, byCode };
+  }, [sets]);
+
   // Filter sets by name or code
   const filteredSets = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -124,6 +141,63 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
     );
   }, [filter, sets]);
 
+  // Organize filtered sets into hierarchy structure
+  const hierarchyDisplay = useMemo(() => {
+    const filtered = new Set(filteredSets.map((s) => s.code));
+    const groups: Array<{
+      parent: ScryfallSet | null;
+      children: ScryfallSet[];
+    }> = [];
+
+    // Add parent groups
+    for (const parent of setHierarchy.parents) {
+      if (filtered.has(parent.code)) {
+        const children = sets
+          .filter(
+            (s) => s.parent_set_code === parent.code && filtered.has(s.code),
+          )
+          .sort((a, b) => {
+            const dateA = a.released_at || "";
+            const dateB = b.released_at || "";
+            return dateB.localeCompare(dateA);
+          });
+        groups.push({ parent, children });
+      } else {
+        // Show parent if any child matches filter
+        const children = sets
+          .filter(
+            (s) => s.parent_set_code === parent.code && filtered.has(s.code),
+          )
+          .sort((a, b) => {
+            const dateA = a.released_at || "";
+            const dateB = b.released_at || "";
+            return dateB.localeCompare(dateA);
+          });
+        if (children.length > 0) {
+          groups.push({ parent, children });
+        }
+      }
+    }
+
+    // Add orphan sets
+    for (const orphan of setHierarchy.orphans) {
+      if (filtered.has(orphan.code)) {
+        groups.push({ parent: null, children: [orphan] });
+      }
+    }
+
+    return groups;
+  }, [filteredSets, setHierarchy, sets]);
+
+  // Flattened list of all displayable sets for focus management
+  const allDisplaySets = useMemo(() => {
+    const result: ScryfallSet[] = [];
+    for (const group of hierarchyDisplay) {
+      result.push(...group.children);
+    }
+    return result;
+  }, [hierarchyDisplay]);
+
   // Compact number formatter for tight badges
   const nfCompact = useMemo(
     () => new Intl.NumberFormat(undefined, { notation: "compact" }),
@@ -132,12 +206,12 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
 
   // Manage roving focus index based on selected set or first filtered item
   useEffect(() => {
-    const idx = filteredSets.findIndex((s) => s.code === selectedSet);
-    const nextIdx = idx >= 0 ? idx : filteredSets.length > 0 ? 0 : -1;
+    const idx = allDisplaySets.findIndex((s) => s.code === selectedSet);
+    const nextIdx = idx >= 0 ? idx : allDisplaySets.length > 0 ? 0 : -1;
     setFocusIdx((prev) =>
-      prev === -1 ? nextIdx : Math.min(prev, filteredSets.length - 1),
+      prev === -1 ? nextIdx : Math.min(prev, allDisplaySets.length - 1),
     );
-  }, [filteredSets, selectedSet]);
+  }, [allDisplaySets, selectedSet]);
 
   const setListRef = (el: HTMLAnchorElement | null, i: number) => {
     listRefs.current[i] = el;
@@ -145,14 +219,15 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
 
   const moveFocus = (i: number) => {
     const clamped =
-      ((i % filteredSets.length) + filteredSets.length) % filteredSets.length;
+      ((i % allDisplaySets.length) + allDisplaySets.length) %
+      allDisplaySets.length;
     setFocusIdx(clamped);
     const el = listRefs.current[clamped];
     el?.focus();
   };
 
   const onItemKeyDown = (e: React.KeyboardEvent, i: number) => {
-    if (filteredSets.length === 0) return;
+    if (allDisplaySets.length === 0) return;
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
@@ -168,11 +243,11 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
         break;
       case "End":
         e.preventDefault();
-        moveFocus(filteredSets.length - 1);
+        moveFocus(allDisplaySets.length - 1);
         break;
       case "PageDown":
         e.preventDefault();
-        moveFocus(Math.min(i + pageStep, filteredSets.length - 1));
+        moveFocus(Math.min(i + pageStep, allDisplaySets.length - 1));
         break;
       case "PageUp":
         e.preventDefault();
@@ -212,7 +287,7 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
     const onResize = () => recalc();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [open, filter, filteredSets.length]);
+  }, [open, filter, allDisplaySets.length]);
 
   return (
     <aside
@@ -309,55 +384,75 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
       </div>
 
       <ul className="space-y-1" role="list">
-        {filteredSets.map((set, i) => (
-          <li key={set.code}>
-            <Link
-              href={`/set/${set.code}`}
-              title={set.name}
-              className={`group relative flex items-center gap-3 rounded-lg ${
-                open ? "px-3 py-2" : "p-2 justify-center"
-              } text-sm font-medium transition-colors ${
-                selectedSet === set.code
-                  ? "bg-accent/20 border border-accent/40 text-foreground"
-                  : "text-foreground hover:bg-surface border border-transparent"
-              }`}
-              aria-current={selectedSet === set.code ? "page" : undefined}
-              onKeyDown={(e) => onItemKeyDown(e, i)}
-              tabIndex={focusIdx === i ? 0 : -1}
-              ref={(el) => setListRef(el, i)}
-            >
-              <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-md bg-surface ring-1 ring-inset ring-card-border">
-                <img
-                  src={set.icon_svg_uri}
-                  alt={set.name}
-                  className="h-4 w-4 brightness-0 invert opacity-85 group-hover:opacity-100"
-                />
-                {!open ? (
-                  <span
-                    className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-sm bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
-                    aria-hidden="true"
-                    title={`${set.card_count} cards`}
-                  >
-                    {nfCompact.format(set.card_count)}
-                  </span>
-                ) : null}
-              </span>
-              {open ? (
-                <>
-                  <span className="truncate flex-1">{set.name}</span>
-                  <span
-                    className={`ml-auto inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
+        {hierarchyDisplay.map((group) => (
+          <li key={group.parent?.code || "orphans"} className="space-y-1">
+            {/* Parent set header */}
+            {group.parent && open ? (
+              <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted/70">
+                {group.parent.name}
+              </div>
+            ) : null}
+
+            {/* Child sets */}
+            {group.children.map((set, setIdx) => {
+              const flatIdx = allDisplaySets.findIndex(
+                (s) => s.code === set.code,
+              );
+              return (
+                <div
+                  key={set.code}
+                  className={group.parent && open ? "pl-4" : ""}
+                >
+                  <Link
+                    href={`/set/${set.code}`}
+                    title={set.name}
+                    className={`group relative flex items-center gap-3 rounded-lg ${
+                      open ? "px-3 py-2" : "p-2 justify-center"
+                    } text-sm font-medium transition-colors ${
                       selectedSet === set.code
-                        ? "bg-accent text-white"
-                        : "bg-surface text-muted ring-1 ring-inset ring-card-border"
+                        ? "bg-accent/20 border border-accent/40 text-foreground"
+                        : "text-foreground hover:bg-surface border border-transparent"
                     }`}
-                    aria-label={`${set.card_count} cards`}
+                    aria-current={selectedSet === set.code ? "page" : undefined}
+                    onKeyDown={(e) => onItemKeyDown(e, flatIdx)}
+                    tabIndex={focusIdx === flatIdx ? 0 : -1}
+                    ref={(el) => setListRef(el, flatIdx)}
                   >
-                    {set.card_count.toLocaleString()}
-                  </span>
-                </>
-              ) : null}
-            </Link>
+                    <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-md bg-surface ring-1 ring-inset ring-card-border">
+                      <img
+                        src={set.icon_svg_uri}
+                        alt={set.name}
+                        className="h-4 w-4 brightness-0 invert opacity-85 group-hover:opacity-100"
+                      />
+                      {!open ? (
+                        <span
+                          className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-sm bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
+                          aria-hidden="true"
+                          title={`${set.card_count} cards`}
+                        >
+                          {nfCompact.format(set.card_count)}
+                        </span>
+                      ) : null}
+                    </span>
+                    {open ? (
+                      <>
+                        <span className="truncate flex-1">{set.name}</span>
+                        <span
+                          className={`ml-auto inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
+                            selectedSet === set.code
+                              ? "bg-accent text-white"
+                              : "bg-surface text-muted ring-1 ring-inset ring-card-border"
+                          }`}
+                          aria-label={`${set.card_count} cards`}
+                        >
+                          {set.card_count.toLocaleString()}
+                        </span>
+                      </>
+                    ) : null}
+                  </Link>
+                </div>
+              );
+            })}
           </li>
         ))}
       </ul>
