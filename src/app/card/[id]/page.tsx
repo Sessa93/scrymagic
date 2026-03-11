@@ -3,12 +3,14 @@ import {
   getCardRulings,
   getCardPrints,
   getCardImage,
+  getCardSymbols,
   formatManaCost,
   ScryfallCard,
 } from "@/lib/scryfall";
 import Image from "next/image";
 import Link from "next/link";
 import ManaSymbol from "@/components/ManaSymbol";
+import ScryfallText, { buildSymbolDictionary } from "@/components/ScryfallText";
 import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
 import { notFound } from "next/navigation";
@@ -44,6 +46,8 @@ export default async function CardPage({ params }: CardPageProps) {
   } catch {
     // Prints may not be available
   }
+
+  const symbolDictionary = buildSymbolDictionary(await getCardSymbols());
 
   const imageUrl = getCardImage(card, "png");
   const manaSymbols = formatManaCost(card.mana_cost);
@@ -115,17 +119,25 @@ export default async function CardPage({ params }: CardPageProps) {
           <div>
             <div className="flex flex-wrap items-start gap-3">
               <h1 className="text-3xl font-bold text-foreground">
-                {card.name}
+                <ScryfallText text={card.name} symbols={symbolDictionary} />
               </h1>
               {manaSymbols.length > 0 && (
                 <div className="flex items-center gap-0.5 pt-1.5">
                   {manaSymbols.map((sym, i) => (
-                    <ManaSymbol key={i} symbol={sym} />
+                    <ManaSymbol
+                      key={i}
+                      symbol={sym}
+                      svgUri={symbolDictionary[sym]?.svg_uri}
+                      label={symbolDictionary[sym]?.english}
+                      className="mx-0.5 inline-block h-6 w-6"
+                    />
                   ))}
                 </div>
               )}
             </div>
-            <p className="mt-1 text-lg text-muted">{typeLine}</p>
+            <p className="mt-1 text-lg text-muted">
+              <ScryfallText text={typeLine} symbols={symbolDictionary} />
+            </p>
           </div>
 
           {/* Oracle Text */}
@@ -136,7 +148,13 @@ export default async function CardPage({ params }: CardPageProps) {
               </h2>
               <div className="space-y-2 text-foreground leading-relaxed">
                 {oracleText.split("\n").map((line, i) => (
-                  <p key={i}>{line}</p>
+                  <p key={i}>
+                    <ScryfallText
+                      text={line}
+                      symbols={symbolDictionary}
+                      symbolClassName="mx-0.5 inline-block h-[1.1em] w-[1.1em] align-[-0.18em]"
+                    />
+                  </p>
                 ))}
               </div>
             </div>
@@ -149,7 +167,11 @@ export default async function CardPage({ params }: CardPageProps) {
                 Flavor Text
               </h2>
               <p className="italic text-muted leading-relaxed">
-                {card.flavor_text}
+                <ScryfallText
+                  text={card.flavor_text}
+                  symbols={symbolDictionary}
+                  symbolClassName="mx-0.5 inline-block h-[1.1em] w-[1.1em] align-[-0.18em]"
+                />
               </p>
             </div>
           )}
@@ -262,7 +284,11 @@ export default async function CardPage({ params }: CardPageProps) {
                     className="rounded-xl border border-card-border bg-card-bg p-4"
                   >
                     <p className="text-sm text-foreground leading-relaxed">
-                      {ruling.comment}
+                      <ScryfallText
+                        text={ruling.comment}
+                        symbols={symbolDictionary}
+                        symbolClassName="mx-0.5 inline-block h-[1.1em] w-[1.1em] align-[-0.18em]"
+                      />
                     </p>
                     <p className="mt-1 text-xs text-muted">
                       {ruling.source} &middot; {ruling.published_at}
@@ -307,7 +333,11 @@ export default async function CardPage({ params }: CardPageProps) {
                   </div>
                   <div className="mt-1.5 px-0.5">
                     <p className="truncate text-xs font-medium text-foreground">
-                      {print.set_name}
+                      <ScryfallText
+                        text={print.set_name}
+                        symbols={symbolDictionary}
+                        symbolClassName="mx-0.5 inline-block h-[1em] w-[1em] align-[-0.15em]"
+                      />
                     </p>
                     <p className="text-[11px] text-muted">
                       #{print.collector_number} &middot;{" "}

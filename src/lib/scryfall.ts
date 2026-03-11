@@ -84,6 +84,24 @@ export interface ScryfallRuling {
   comment: string;
 }
 
+export interface ScryfallCardSymbol {
+  object: "card_symbol";
+  symbol: string;
+  loose_variant: string | null;
+  english: string;
+  svg_uri: string | null;
+  transposable: boolean;
+  represents_mana: boolean;
+  appears_in_mana_costs: boolean;
+  mana_value: number | null;
+  hybrid: boolean;
+  phyrexian: boolean;
+  cmc: number | null;
+  funny: boolean;
+  colors: string[];
+  gatherer_alternates: string[] | null;
+}
+
 const BASE_URL = "https://api.scryfall.com";
 
 export async function scryfall<T>(
@@ -154,6 +172,15 @@ export async function getCardPrints(
 
 export async function getRandomCard(): Promise<ScryfallCard> {
   return scryfall<ScryfallCard>("/cards/random", { cache: "no-store" });
+}
+
+export async function getCardSymbols(): Promise<ScryfallCardSymbol[]> {
+  const response = await scryfall<{ data: ScryfallCardSymbol[] }>(
+    "/symbology",
+    { revalidate: 86400 },
+  );
+
+  return response.data;
 }
 
 export async function autocomplete(query: string): Promise<{ data: string[] }> {
