@@ -26,47 +26,39 @@ export default function SetInfo({ set, childSets, parentSet }: SetInfoProps) {
   };
 
   return (
-    <div className="mb-8 rounded-lg border border-card-border bg-card-bg/50 backdrop-blur-sm p-6">
+    <div className="mb-4 rounded-lg border border-card-border bg-card-bg/50 backdrop-blur-sm p-4">
       {/* Main set header */}
-      <div className="mb-6">
-        <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface ring-1 ring-inset ring-card-border">
-            <img src={set.icon_svg_uri} alt={set.name} className="h-10 w-10" />
-          </div>
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface ring-1 ring-inset ring-card-border">
+          <img src={set.icon_svg_uri} alt={set.name} className="h-6 w-6" />
+        </div>
 
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <h1 className="text-3xl font-bold text-foreground">{set.name}</h1>
-              <span className="inline-flex items-center rounded-sm bg-accent/20 px-3 py-1 text-sm font-semibold text-accent ring-1 ring-inset ring-accent/40">
-                {formatSetType(set.set_type)}
-              </span>
-            </div>
-
-            <div className="text-sm text-muted">
-              Set Code:{" "}
-              <span className="font-mono font-semibold text-foreground">
-                {set.code.toUpperCase()}
-              </span>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-foreground leading-tight">
+            {set.name}
+          </h1>
+          <span className="inline-flex items-center rounded-sm bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent ring-1 ring-inset ring-accent/40">
+            {formatSetType(set.set_type)}
+          </span>
+          <span className="text-xs text-muted font-mono">
+            {set.code.toUpperCase()}
+          </span>
         </div>
       </div>
 
-      {/* Set details grid */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mb-6">
-        {/* Card Count */}
-        <div className="rounded-md bg-surface/50 p-4 ring-1 ring-inset ring-card-border/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+      {/* Set details row */}
+      <div className="flex flex-wrap gap-3 mb-3">
+        <div className="rounded-md bg-surface/50 px-3 py-2 ring-1 ring-inset ring-card-border/50 flex items-center gap-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted">
             Cards
           </div>
-          <div className="text-2xl font-bold text-foreground">
+          <div className="text-sm font-bold text-foreground">
             {set.card_count.toLocaleString()}
           </div>
         </div>
 
-        {/* Release Date */}
-        <div className="rounded-md bg-surface/50 p-4 ring-1 ring-inset ring-card-border/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+        <div className="rounded-md bg-surface/50 px-3 py-2 ring-1 ring-inset ring-card-border/50 flex items-center gap-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted">
             Released
           </div>
           <div className="text-sm font-semibold text-foreground">
@@ -74,10 +66,9 @@ export default function SetInfo({ set, childSets, parentSet }: SetInfoProps) {
           </div>
         </div>
 
-        {/* Block (if available) */}
         {set.block && (
-          <div className="rounded-md bg-surface/50 p-4 ring-1 ring-inset ring-card-border/50">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
+          <div className="rounded-md bg-surface/50 px-3 py-2 ring-1 ring-inset ring-card-border/50 flex items-center gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted">
               Block
             </div>
             <div className="text-sm font-semibold text-foreground">
@@ -86,13 +77,12 @@ export default function SetInfo({ set, childSets, parentSet }: SetInfoProps) {
           </div>
         )}
 
-        {/* Printed Size (if available) */}
         {set.printed_size && (
-          <div className="rounded-md bg-surface/50 p-4 ring-1 ring-inset ring-card-border/50">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-              Printed Size
+          <div className="rounded-md bg-surface/50 px-3 py-2 ring-1 ring-inset ring-card-border/50 flex items-center gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Printed
             </div>
-            <div className="text-2xl font-bold text-foreground">
+            <div className="text-sm font-bold text-foreground">
               {set.printed_size}
             </div>
           </div>
@@ -101,7 +91,7 @@ export default function SetInfo({ set, childSets, parentSet }: SetInfoProps) {
 
       {/* Parent/Child Sets section */}
       {(parentSet || (childSets && childSets.length > 0)) && (
-        <div className="border-t border-card-border/40 pt-6 space-y-4">
+        <div className="border-t border-card-border/40 pt-3 space-y-3">
           {/* Parent Set */}
           {parentSet && (
             <div>

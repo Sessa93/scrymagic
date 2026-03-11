@@ -388,9 +388,25 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
           <li key={group.parent?.code || "orphans"} className="space-y-1">
             {/* Parent set header */}
             {group.parent && open ? (
-              <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted/70">
+              <Link
+                href={`/set/${group.parent.code}`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors border ${
+                  selectedSet === group.parent.code
+                    ? "text-accent border-accent/40 bg-accent/10"
+                    : "text-muted/70 border-transparent hover:text-accent hover:bg-surface/60"
+                }`}
+                aria-current={
+                  selectedSet === group.parent.code ? "page" : undefined
+                }
+              >
+                <img
+                  src={group.parent.icon_svg_uri}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 brightness-0 invert opacity-60"
+                />
                 {group.parent.name}
-              </div>
+              </Link>
             ) : null}
 
             {/* Child sets */}
