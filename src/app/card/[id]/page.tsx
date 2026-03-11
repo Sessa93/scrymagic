@@ -1,10 +1,13 @@
 import {
   getCardById,
   getCardRulings,
+  getCardPrints,
   getCardImage,
   formatManaCost,
+  ScryfallCard,
 } from "@/lib/scryfall";
 import Image from "next/image";
+import Link from "next/link";
 import ManaSymbol from "@/components/ManaSymbol";
 import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
@@ -30,6 +33,16 @@ export default async function CardPage({ params }: CardPageProps) {
     rulings = rulingsData.data;
   } catch {
     // Rulings may not be available
+  }
+
+  let alternatePrints: ScryfallCard[] = [];
+  try {
+    if (card.prints_search_uri) {
+      const printsData = await getCardPrints(card.prints_search_uri);
+      alternatePrints = printsData.data.filter((p) => p.id !== card.id);
+    }
+  } catch {
+    // Prints may not be available
   }
 
   const imageUrl = getCardImage(card, "png");
@@ -261,6 +274,52 @@ export default async function CardPage({ params }: CardPageProps) {
           )}
         </div>
       </div>
+
+      {/* Other Printings */}
+      {alternatePrints.length > 0 && (
+        <div className="mt-12">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">
+            Other Printings ({alternatePrints.length})
+          </h2>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {alternatePrints.map((print) => {
+              const printImage = getCardImage(print, "small");
+              return (
+                <Link
+                  key={print.id}
+                  href={`/card/${print.id}`}
+                  className="group shrink-0 w-30"
+                >
+                  <div className="overflow-hidden rounded-md bg-surface shadow-md transition-transform group-hover:scale-105">
+                    {printImage ? (
+                      <Image
+                        src={printImage}
+                        alt={`${print.name} — ${print.set_name}`}
+                        width={120}
+                        height={167}
+                        className="block w-full"
+                      />
+                    ) : (
+                      <div className="flex h-41.75 items-center justify-center bg-surface text-xs text-muted">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1.5 px-0.5">
+                    <p className="truncate text-xs font-medium text-foreground">
+                      {print.set_name}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      #{print.collector_number} &middot;{" "}
+                      <span className="capitalize">{print.rarity}</span>
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

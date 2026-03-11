@@ -50,6 +50,7 @@ export interface ScryfallCard {
   flavor_text?: string;
   keywords?: string[];
   collector_number?: string;
+  prints_search_uri?: string;
 }
 
 export interface ScryfallSearchResult {
@@ -132,6 +133,19 @@ export async function getCardRulings(
   id: string,
 ): Promise<{ data: ScryfallRuling[] }> {
   return scryfall<{ data: ScryfallRuling[] }>(`/cards/${id}/rulings`);
+}
+
+export async function getCardPrints(
+  printsSearchUri: string,
+): Promise<ScryfallSearchResult> {
+  const res = await fetch(printsSearchUri, {
+    headers: { Accept: "application/json" },
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) {
+    throw new Error(`Scryfall API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<ScryfallSearchResult>;
 }
 
 export async function getRandomCard(): Promise<ScryfallCard> {
