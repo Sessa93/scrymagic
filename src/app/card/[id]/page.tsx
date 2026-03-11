@@ -187,7 +187,13 @@ export default async function CardPage({ params }: CardPageProps) {
             {card.loyalty && <InfoCard label="Loyalty" value={card.loyalty} />}
             <InfoCard
               label="Rarity"
-              valueNode={<RarityBadge rarity={card.rarity} />}
+              valueNode={
+                <RarityBadge
+                  rarity={card.rarity}
+                  setCode={card.set}
+                  setName={card.set_name}
+                />
+              }
             />
             <InfoCard label="Set" value={card.set_name} />
             {card.collector_number && (

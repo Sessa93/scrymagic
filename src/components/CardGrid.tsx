@@ -357,7 +357,12 @@ function CardGridItem({
           <span className="text-[11px] text-muted truncate">
             {card.set_name}
           </span>
-          <RarityBadge rarity={card.rarity} compact />
+          <RarityBadge
+            rarity={card.rarity}
+            setCode={card.set}
+            setName={card.set_name}
+            compact
+          />
         </div>
       </div>
     </Link>
@@ -427,7 +432,12 @@ function ExpandedPreviewContent({
           <div className="inline-flex items-center rounded-sm border border-card-border/60 bg-surface/70 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted">
             {card.set.toUpperCase()} #{card.collector_number ?? "-"}
           </div>
-          <RarityBadge rarity={card.rarity} compact />
+          <RarityBadge
+            rarity={card.rarity}
+            setCode={card.set}
+            setName={card.set_name}
+            compact
+          />
         </div>
       </div>
 
