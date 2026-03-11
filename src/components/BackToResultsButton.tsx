@@ -27,7 +27,7 @@ export default function BackToResultsButton() {
       >
         <path d="M15 19l-7-7 7-7" />
       </svg>
-      Back to results
+      Back
     </button>
   );
 }

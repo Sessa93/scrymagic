@@ -62,6 +62,11 @@ export default async function CardPage({ params }: CardPageProps) {
     card.type_line ||
     card.card_faces?.map((f) => f.type_line).join(" // ") ||
     "";
+  const setHref = buildSearchHref(`set:${card.set}`);
+  const artistHref = card.artist
+    ? buildSearchHref(`a:"${card.artist.replaceAll('"', '\\"')}"`)
+    : null;
+  const legalityGroups = getLegalityGroups(card.legalities);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -195,14 +200,39 @@ export default async function CardPage({ params }: CardPageProps) {
                 />
               }
             />
-            <InfoCard label="Set" value={card.set_name} />
+            <InfoCard
+              label="Set"
+              valueNode={
+                <Link
+                  href={setHref}
+                  className="mt-0.5 inline-block text-sm font-medium text-foreground hover:text-accent transition-colors"
+                >
+                  {card.set_name}
+                </Link>
+              }
+            />
             {card.collector_number && (
               <InfoCard
                 label="Collector #"
                 value={`${card.set.toUpperCase()} #${card.collector_number}`}
               />
             )}
-            {card.artist && <InfoCard label="Artist" value={card.artist} />}
+            {card.artist && (
+              <InfoCard
+                label="Artist"
+                valueNode={
+                  artistHref ? (
+                    <Link
+                      href={artistHref}
+                      className="mt-0.5 inline-block text-sm font-medium text-foreground hover:text-accent transition-colors"
+                    >
+                      {card.artist}
+                    </Link>
+                  ) : undefined
+                }
+                value={artistHref ? undefined : card.artist}
+              />
+            )}
             {card.released_at && (
               <InfoCard label="Released" value={card.released_at} />
             )}
@@ -233,22 +263,31 @@ export default async function CardPage({ params }: CardPageProps) {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">
               Legalities
             </h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-              {Object.entries(card.legalities).map(([format, status]) => (
-                <div
-                  key={format}
-                  className="flex items-center justify-between rounded-lg border border-card-border bg-card-bg px-3 py-1.5"
-                >
-                  <span className="text-xs capitalize text-muted">
-                    {format.replace(/_/g, " ")}
-                  </span>
-                  <span
-                    className={`inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getLegalityBadgeClass(
-                      status,
-                    )}`}
-                  >
-                    {formatLegalityLabel(status)}
-                  </span>
+            <div className="space-y-3 rounded-xl border border-card-border bg-card-bg p-4">
+              {legalityGroups.map((group) => (
+                <div key={group.status} className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                      {formatLegalityLabel(group.status)}
+                    </h3>
+                    <span
+                      className={`inline-flex items-center rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getLegalityBadgeClass(
+                        group.status,
+                      )}`}
+                    >
+                      {group.items.length}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((item) => (
+                      <span
+                        key={item.format}
+                        className="rounded-sm border border-card-border/70 bg-surface px-2.5 py-1 text-xs text-foreground"
+                      >
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -388,6 +427,28 @@ function formatLegalityLabel(status: string): string {
   return status;
 }
 
+function formatLegalityName(format: string): string {
+  return format.replace(/_/g, " ");
+}
+
+function getLegalityGroups(legalities: Record<string, string>) {
+  const statusOrder = ["legal", "restricted", "banned", "not_legal"];
+  const entries = Object.entries(legalities)
+    .map(([format, status]) => ({
+      format,
+      status,
+      label: formatLegalityName(format),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  return statusOrder
+    .map((status) => ({
+      status,
+      items: entries.filter((entry) => entry.status === status),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
 function getLegalityBadgeClass(status: string): string {
   if (status === "legal") {
     return "bg-emerald-500/20 text-emerald-200 ring-1 ring-inset ring-emerald-400/60";
@@ -408,4 +469,8 @@ function PriceBadge({ label, value }: { label: string; value: string }) {
       <span className="ml-2 text-sm font-bold text-green-400">{value}</span>
     </div>
   );
+}
+
+function buildSearchHref(query: string): string {
+  return `/search?q=${encodeURIComponent(query)}&original=${encodeURIComponent(query)}`;
 }
