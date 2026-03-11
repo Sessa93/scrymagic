@@ -3,12 +3,13 @@ import SortableCardGrid from "@/components/SortableCardGrid";
 import Link from "next/link";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; original?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = params.q || "";
+  const original = params.original || "";
   const page = parseInt(params.page || "1", 10);
 
   if (!query) {
@@ -31,8 +32,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             No cards found
           </h2>
           <p className="text-muted">
-            No cards match &ldquo;{query}&rdquo;. Try a different search term or
-            check the{" "}
+            No cards match &ldquo;{original || query}&rdquo;. Try a different
+            search term or check the{" "}
             <a
               href="https://scryfall.com/docs/syntax"
               target="_blank"
@@ -48,16 +49,39 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     );
   }
 
+  // Preserve `original` across pagination links
+  const paginationBase = original
+    ? `/search?q=${encodeURIComponent(query)}&original=${encodeURIComponent(original)}`
+    : `/search?q=${encodeURIComponent(query)}`;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 space-y-1">
         <h1 className="text-xl font-semibold">
           <span className="text-muted">Results for</span>{" "}
-          <span className="text-foreground">&ldquo;{query}&rdquo;</span>
+          <span className="text-foreground">
+            &ldquo;{original || query}&rdquo;
+          </span>
           <span className="ml-2 text-sm font-normal text-muted">
             ({results.total_cards.toLocaleString()} cards)
           </span>
         </h1>
+        {original && original !== query && (
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-3.5 w-3.5 shrink-0 text-accent"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm1 14.5h-2v-6h2v6Zm0-8h-2V6.5h2V8.5Z" />
+            </svg>
+            Translated to Scryfall syntax:{" "}
+            <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-foreground ring-1 ring-inset ring-card-border">
+              {query}
+            </code>
+          </p>
+        )}
       </div>
 
       <SortableCardGrid cards={results.data} />
@@ -66,7 +90,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className="mt-8 flex items-center justify-center gap-4 pb-8">
         {page > 1 && (
           <Link
-            href={`/search?q=${encodeURIComponent(query)}&page=${page - 1}`}
+            href={`${paginationBase}&page=${page - 1}`}
             className="rounded-lg border border-card-border bg-card-bg px-4 py-2 text-sm font-medium text-foreground hover:border-accent transition-colors"
           >
             &larr; Previous
@@ -75,7 +99,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <span className="text-sm text-muted">Page {page}</span>
         {results.has_more && (
           <Link
-            href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}`}
+            href={`${paginationBase}&page=${page + 1}`}
             className="rounded-lg border border-card-border bg-card-bg px-4 py-2 text-sm font-medium text-foreground hover:border-accent transition-colors"
           >
             Next &rarr;

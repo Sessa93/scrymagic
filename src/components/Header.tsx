@@ -1,17 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Header() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [translating, setTranslating] = useState(false);
+  const pathname = usePathname();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    const trimmed = query.trim();
+    if (!trimmed) return;
+
+    setTranslating(true);
+    try {
+      const res = await fetch("/api/translate-query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: trimmed }),
+      });
+      const data = await res.json();
+      const scryfallQuery: string = data.translated ?? trimmed;
+      router.push(
+        `/search?q=${encodeURIComponent(scryfallQuery)}&original=${encodeURIComponent(trimmed)}`,
+      );
+    } catch {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    } finally {
+      setTranslating(false);
     }
   };
 
@@ -35,21 +54,25 @@ export default function Header() {
           </svg>
           ScryMagic
         </Link>
-        <form onSubmit={handleSearch} className="flex flex-1 max-w-xl">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search cards..."
-            className="flex-1 rounded-l-lg border border-input-border bg-input-bg px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
-          />
-          <button
-            type="submit"
-            className="rounded-r-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
-          >
-            Search
-          </button>
-        </form>
+        {pathname !== "/" ? (
+          <form onSubmit={handleSearch} className="flex flex-1 max-w-xl">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search cards..."
+              className="flex-1 rounded-l-lg border border-input-border bg-input-bg px-4 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors"
+              disabled={translating}
+            />
+            <button
+              type="submit"
+              disabled={translating}
+              className="rounded-r-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {translating ? "Thinking..." : "Search"}
+            </button>
+          </form>
+        ) : null}
       </div>
     </header>
   );
