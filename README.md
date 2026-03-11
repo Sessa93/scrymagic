@@ -1,83 +1,130 @@
 # ScryMagic
 
-A sleek card explorer for **Magic: The Gathering**, powered by the Scryfall API.
+ScryMagic is a Magic: The Gathering card explorer built on top of the Scryfall API. It combines direct Scryfall syntax search with an optional natural-language query translator, then presents cards, sets, and card details in a focused Next.js interface.
 
-Search cards, browse sets, and dive into detailed card data including oracle text, legalities, rulings, and pr
+## What It Does
 
-### Screenshots
+- Search cards with native Scryfall syntax or plain-English prompts
+- Browse sets from a persistent sidebar
+- View full card details including oracle text, legality, prices, keywords, and rulings
+- Explore alternate printings for a card
+- Browse a set's cards, including grouped child sets when applicable
+- Show a random card gallery on the home page
 
-#### Sets
+## Screenshots
 
-![ScryMagic App Screenshot](docs/images/sets.png)
+### Sets
 
-#### Search
+![Sets view](docs/images/sets.png)
 
-![ScryMagic App Screenshot](docs/images/search.png)
+### Search
 
-#### Details Page
+![Search view](docs/images/search.png)
 
-![ScryMagic App Screenshot](docs/images/details.png)
+### Card Details
 
-## Features
+![Card details view](docs/images/details.png)
 
-- Fast full-text card search with pagination
-- Rich card detail pages with mana symbols and rarity coloring
-- Rulings, legalities, and market pricing data
-- Set browser with filter + keyboard-friendly navigation
-- Responsive layout for desktop and mobile
-- Server-side fetching with Next.js App Router
+## Stack
 
-## Tech Stack
-
-- Next.js 16 (App Router)
+- Next.js 16 App Router
 - React 19
 - TypeScript
 - Tailwind CSS 4
 - Scryfall API
+- OpenAI API for query translation
 
-## Getting Started
+## Requirements
 
-### 1. Install dependencies
+- Node.js 20+
+- npm
+
+## Local Development
+
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Start development server
+### Configure environment
+
+Create a `.env.local` file in the project root.
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+```
+
+`OPENAI_API_KEY` is optional for the core app, but it is required if you want plain-English search terms such as `red dragons with flying` to be translated into Scryfall syntax automatically. Without it, direct Scryfall syntax searches still work.
+
+### Run the app
 
 ```bash
 npm run dev
 ```
 
-Open <http://localhost:3000> in your browser.
+Open <http://localhost:3000>.
+
+## Docker
+
+The repository includes a production-oriented Dockerfile and a docker-compose setup.
+
+### Start with Docker Compose
+
+```bash
+OPENAI_API_KEY=your_openai_api_key docker compose up --build
+```
+
+The app will be available at <http://localhost:3000>.
 
 ## Available Scripts
 
-- `npm run dev` - Start local development server
-- `npm run build` - Build for production
-- `npm run start` - Run production build locally
-- `npm run lint` - Run ESLint
+- `npm run dev` starts the development server
+- `npm run build` creates a production build
+- `npm run start` runs the production server
+- `npm run lint` runs ESLint
 
-## Project Routes
+## Routes
 
-- `/` - Home page with global search and set sidebar
-- `/search?q=<query>` - Search results
-- `/card/[id]` - Card details
-- `/set/[code]` - Cards from a specific set
+- `/` home page with search, stats, sidebar navigation, and random cards
+- `/search?q=<query>` search results with pagination
+- `/card/[id]` detailed card page
+- `/set/[code]` set page with set metadata and card listings
+- `/api/translate-query` API route that translates natural language into Scryfall syntax
 
-## Data Source
+## Search Behavior
 
-ScryMagic uses the public [Scryfall API](https://scryfall.com/docs/api) for card and set data.
+The search box supports two modes:
 
-## Deployment
+- Scryfall syntax directly, such as `t:dragon c:r mv>=5`
+- Natural language, such as `green creatures with power 5 or more`
 
-Deploy anywhere that supports Next.js. Vercel is the quickest option.
+When an OpenAI API key is configured, the app sends natural-language queries to the translation endpoint and then searches Scryfall with the translated query.
 
-```bash
-npm run build
-npm run start
+## Project Structure
+
+```text
+src/
+  app/
+    api/translate-query/   OpenAI-backed query translation endpoint
+    card/[id]/             Card details page
+    search/                Search results page
+    set/[code]/            Set details and card listing page
+  components/              UI building blocks
+  lib/                     Scryfall and set data helpers
 ```
+
+## Data Sources
+
+- Card data and set metadata come from the public Scryfall API
+- Query translation uses the OpenAI API when configured
+
+## Notes
+
+- External card images are loaded from `cards.scryfall.io`
+- The Next.js build is configured for standalone output
+- The container image uses Bun to build and run the production bundle
 
 ## License
 
-This project is for educational/personal use. Review Scryfall's API terms before commercial use.
+This project is for educational and personal use. Review Scryfall's API terms before using it commercially.
