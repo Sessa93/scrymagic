@@ -18,8 +18,8 @@ interface HoverPreviewState {
   visible: boolean;
 }
 
-const PREVIEW_WIDTH = 320;
-const PREVIEW_HEIGHT = 446;
+const PREVIEW_WIDTH = 360;
+const PREVIEW_HEIGHT = 502;
 const PREVIEW_GAP = 16;
 const HOVER_DELAY_MS = 1000;
 
@@ -96,7 +96,7 @@ export default function CardGrid({ cards }: CardGridProps) {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
         {cards.map((card) => (
           <CardGridItem
             key={card.id}
@@ -123,7 +123,7 @@ export default function CardGrid({ cards }: CardGridProps) {
               alt={preview.cardName}
               width={PREVIEW_WIDTH}
               height={PREVIEW_HEIGHT}
-              className="block h-auto w-[320px]"
+              className="block h-auto w-90"
             />
           </div>
         </div>
@@ -152,7 +152,7 @@ function CardGridItem({
   return (
     <Link
       href={`/card/${card.id}`}
-      className="group relative overflow-hidden rounded-xl bg-transparent transition-all hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-1"
+      className="group relative overflow-hidden rounded-lg bg-transparent transition-all hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5"
       onMouseEnter={(e) => {
         if (imageUrl) onHoverStart(e, imageUrl, card.name);
       }}
@@ -175,11 +175,13 @@ function CardGridItem({
         )}
       </div>
       <div className="p-2">
-        <p className="truncate text-sm font-medium text-foreground">
+        <p className="truncate text-xs font-medium text-foreground">
           {card.name}
         </p>
         <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-muted truncate">{card.set_name}</span>
+          <span className="text-[11px] text-muted truncate">
+            {card.set_name}
+          </span>
           <RarityBadge rarity={card.rarity} compact />
         </div>
       </div>
