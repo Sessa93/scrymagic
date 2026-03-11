@@ -92,6 +92,10 @@ export async function scryfall<T>(
 ): Promise<T> {
   const isNoStore = options?.cache === "no-store";
 
+  if (isNoStore) {
+    path = `${path}${path.includes("?") ? "&" : "?"}nonce=${Date.now()}`;
+  }
+
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { Accept: "application/json" },
     ...(options?.cache ? { cache: options.cache } : {}),
@@ -121,7 +125,7 @@ export async function searchCards(
 ): Promise<ScryfallSearchResult> {
   const encoded = encodeURIComponent(query);
   return scryfall<ScryfallSearchResult>(
-    `/cards/search?q=${encoded}&page=${page}`,
+    `/cards/search?q=${encoded}&include_extras=true&include_variations=true&unique=prints&page=${page}`,
   );
 }
 

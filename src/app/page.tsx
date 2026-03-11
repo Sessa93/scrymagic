@@ -8,7 +8,7 @@ import CardGrid from "@/components/CardGrid";
 export default async function Home() {
   const [sets, randomCards] = await Promise.all([
     getAllSets(),
-    getRandomCards(5),
+    getRandomCards(7),
   ]);
 
   return (
@@ -51,22 +51,16 @@ export default async function Home() {
 
 async function getRandomCards(count: number): Promise<ScryfallCard[]> {
   const uniqueCards = new Map<string, ScryfallCard>();
+  const MAX_ATTEMPTS = 10;
 
   for (
-    let attempts = 0;
-    attempts < 3 && uniqueCards.size < count;
-    attempts += 1
+    let attempt = 0;
+    attempt < MAX_ATTEMPTS && uniqueCards.size < count;
+    attempt += 1
   ) {
-    const remaining = count - uniqueCards.size;
-    const batch = await Promise.allSettled(
-      Array.from({ length: remaining }, () => getRandomCard()),
-    );
-
-    for (const item of batch) {
-      if (item.status === "fulfilled") {
-        uniqueCards.set(item.value.id, item.value);
-      }
-    }
+    const card = await getRandomCard().catch(() => null);
+    if (!card) continue;
+    uniqueCards.set(card.id, card);
   }
 
   return Array.from(uniqueCards.values()).slice(0, count);
