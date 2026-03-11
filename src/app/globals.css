@@ -1,22 +1,31 @@
 @import "tailwindcss";
 
-/* Magic: The Gathering inspired palette */
+/* Dark blue / red application palette */
 :root {
-  --background: radial-gradient(
-    circle at 12% 8%,
-    #2f1f0f 0%,
-    #161311 34%,
-    #0e0d0d 100%
-  );
-  --foreground: #f2e7cf;
-  --card-bg: linear-gradient(145deg, #2a2016 0%, #201812 58%, #1a130f 100%);
-  --card-border: #8d6b43;
-  --accent: #c88d3b;
-  --accent-hover: #dfae63;
-  --muted: #b7a487;
-  --input-bg: #1e1713;
-  --input-border: #9a7345;
-  --surface: #2b2119;
+  --background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(66, 112, 216, 0.2) 0%,
+      rgba(18, 27, 56, 0) 32%
+    ),
+    radial-gradient(
+      circle at 84% 18%,
+      rgba(160, 34, 62, 0.18) 0%,
+      rgba(24, 18, 35, 0) 30%
+    ),
+    linear-gradient(180deg, #0f1830 0%, #0a1123 46%, #070b18 100%);
+  --foreground: #e7eefc;
+  --card-bg: linear-gradient(160deg, #172446 0%, #111a34 52%, #0d1428 100%);
+  --card-border: #314f85;
+  --accent: #c63a5b;
+  --accent-hover: #e04a6f;
+  --muted: #93a8d6;
+  --input-bg: #0d1730;
+  --input-border: #395a95;
+  --surface: #16213f;
+  --surface-elevated: #1b2a50;
+  --glow-blue: rgba(72, 120, 222, 0.18);
+  --glow-red: rgba(198, 58, 91, 0.16);
 }
 
 @theme inline {
@@ -39,13 +48,28 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), "Beleren", Arial, Helvetica, sans-serif;
   letter-spacing: 0.02em;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.015), transparent 40%),
+    linear-gradient(315deg, rgba(255, 255, 255, 0.012), transparent 36%),
+    radial-gradient(circle at 20% 20%, var(--glow-blue), transparent 28%),
+    radial-gradient(circle at 80% 14%, var(--glow-red), transparent 24%);
+  opacity: 0.95;
+  z-index: -1;
 }
 
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #2c2c2c;
+  background: #0b1224;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--card-border);
@@ -61,8 +85,9 @@ body {
   border: 2px solid var(--card-border);
   border-radius: 6px;
   box-shadow:
-    0 4px 24px #000a,
-    0 0 0 4px var(--card-border);
+    0 18px 45px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(231, 238, 252, 0.03),
+    0 0 0 4px color-mix(in srgb, var(--card-border) 72%, transparent);
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
@@ -188,6 +213,6 @@ body {
 
 /* Gold text for rarity */
 .mtg-gold {
-  color: #d4af37;
+  color: #f0ca6a;
   text-shadow: 0 1px 2px #000a;
 }
