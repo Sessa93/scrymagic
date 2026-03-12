@@ -127,3 +127,6 @@ Desktop.ini
 *.gemini*
 *.openai*
 *.anthropic*
+
+# Sidecars apps
+sidercar/

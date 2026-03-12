@@ -10,6 +10,12 @@ export class IngestScryfallDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(256)
-  batchSize: number = 32;
+  @Max(1024)
+  batchSize: number = 64;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(16)
+  workerCount: number = 1;
 }

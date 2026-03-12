@@ -16,6 +16,9 @@ export interface StoredCard {
   name: string;
   oracle_text: string | null;
   flavor_text: string | null;
+  oracle_source_hash: string | null;
+  flavor_source_hash: string | null;
+  visual_source_hash: string | null;
   image_uri: string | null;
   scryfall_uri: string;
   set_code: string;
@@ -41,6 +44,16 @@ interface FindByVectorLiteralInput {
 
 interface CardVisualEmbeddingRow {
   card_id: string;
+  visual_embedding: string | null;
+}
+
+export interface ExistingStoredCardRow {
+  card_id: string;
+  oracle_source_hash: string | null;
+  flavor_source_hash: string | null;
+  visual_source_hash: string | null;
+  oracle_embedding: string | null;
+  flavor_embedding: string | null;
   visual_embedding: string | null;
 }
 
@@ -90,6 +103,9 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
         name TEXT NOT NULL,
         oracle_text TEXT,
         flavor_text TEXT,
+        oracle_source_hash TEXT,
+        flavor_source_hash TEXT,
+        visual_source_hash TEXT,
         image_uri TEXT,
         scryfall_uri TEXT NOT NULL,
         set_code TEXT NOT NULL,
@@ -100,6 +116,16 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+
+    await this.pool.query(
+      'ALTER TABLE card_embeddings ADD COLUMN IF NOT EXISTS oracle_source_hash TEXT',
+    );
+    await this.pool.query(
+      'ALTER TABLE card_embeddings ADD COLUMN IF NOT EXISTS flavor_source_hash TEXT',
+    );
+    await this.pool.query(
+      'ALTER TABLE card_embeddings ADD COLUMN IF NOT EXISTS visual_source_hash TEXT',
+    );
 
     await this.pool.query(`
       CREATE INDEX IF NOT EXISTS card_embeddings_oracle_embedding_idx
@@ -155,6 +181,9 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
               name,
               oracle_text,
               flavor_text,
+              oracle_source_hash,
+              flavor_source_hash,
+              visual_source_hash,
               image_uri,
               scryfall_uri,
               set_code,
@@ -164,21 +193,25 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
               visual_embedding,
               updated_at
             ) VALUES (
-              $1, $2, $3, $4, $5, $6, $7, $8,
-              $9::vector, $10::vector, $11::vector,
+              $1, $2, $3, $4, $5, $6, $7,
+              $8, $9, $10, $11,
+              $12::vector, $13::vector, $14::vector,
               NOW()
             )
             ON CONFLICT (card_id) DO UPDATE SET
               name = EXCLUDED.name,
               oracle_text = EXCLUDED.oracle_text,
               flavor_text = EXCLUDED.flavor_text,
+              oracle_source_hash = EXCLUDED.oracle_source_hash,
+              flavor_source_hash = EXCLUDED.flavor_source_hash,
+              visual_source_hash = EXCLUDED.visual_source_hash,
               image_uri = EXCLUDED.image_uri,
               scryfall_uri = EXCLUDED.scryfall_uri,
               set_code = EXCLUDED.set_code,
               collector_number = EXCLUDED.collector_number,
-              oracle_embedding = EXCLUDED.oracle_embedding,
-              flavor_embedding = EXCLUDED.flavor_embedding,
-              visual_embedding = EXCLUDED.visual_embedding,
+              oracle_embedding = COALESCE(EXCLUDED.oracle_embedding, card_embeddings.oracle_embedding),
+              flavor_embedding = COALESCE(EXCLUDED.flavor_embedding, card_embeddings.flavor_embedding),
+              visual_embedding = COALESCE(EXCLUDED.visual_embedding, card_embeddings.visual_embedding),
               updated_at = NOW()
           `,
           [
@@ -186,6 +219,9 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
             card.name,
             card.oracle_text,
             card.flavor_text,
+            card.oracle_source_hash,
+            card.flavor_source_hash,
+            card.visual_source_hash,
             card.image_uri,
             card.scryfall_uri,
             card.set_code,
@@ -205,6 +241,32 @@ export class PgVectorService implements OnModuleInit, OnModuleDestroy {
     }
 
     return cards.length;
+  }
+
+  async getExistingCardsByIds(
+    cardIds: string[],
+  ): Promise<Map<string, ExistingStoredCardRow>> {
+    if (cardIds.length === 0) {
+      return new Map();
+    }
+
+    const { rows } = await this.pool.query<ExistingStoredCardRow>(
+      `
+        SELECT
+          card_id,
+          oracle_source_hash,
+          flavor_source_hash,
+          visual_source_hash,
+          oracle_embedding,
+          flavor_embedding,
+          visual_embedding
+        FROM card_embeddings
+        WHERE card_id = ANY($1::text[])
+      `,
+      [cardIds],
+    );
+
+    return new Map(rows.map((row) => [row.card_id, row]));
   }
 
   async findNearestByEmbedding(
