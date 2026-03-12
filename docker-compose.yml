@@ -9,3 +9,42 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
       OPENAI_MODEL: gpt-4o
+
+  recommender-db:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    profiles:
+      - recommender
+    environment:
+      POSTGRES_DB: scrymagic_recommender
+      POSTGRES_USER: recommender
+      POSTGRES_PASSWORD: recommender
+    ports:
+      - 5433:5432
+    volumes:
+      - recommender_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recommender -d scrymagic_recommender"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  recommender:
+    build:
+      context: ./sidecars/recommender
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    profiles:
+      - recommender
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
+      DATABASE_URL: postgres://recommender:recommender@recommender-db:5432/scrymagic_recommender
+      PORT: 3001
+    ports:
+      - 3001:3001
+    depends_on:
+      recommender-db:
+        condition: service_healthy
+
+volumes:
+  recommender_pgdata:
