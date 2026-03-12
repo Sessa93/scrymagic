@@ -1,6 +1,8 @@
 // Scryfall API types and helpers
 // API docs: https://scryfall.com/docs/api
 
+import { getJsonFromRedis, setJsonInRedis } from "@/lib/redis";
+
 export interface ScryfallCard {
   id: string;
   name: string;
@@ -103,6 +105,8 @@ export interface ScryfallCardSymbol {
 }
 
 const BASE_URL = "https://api.scryfall.com";
+const CARD_CACHE_PREFIX = "cards:";
+const ONE_WEEK_IN_SECONDS = 60 * 60 * 24 * 7;
 
 export async function scryfall<T>(
   path: string,
@@ -148,7 +152,17 @@ export async function searchCards(
 }
 
 export async function getCardById(id: string): Promise<ScryfallCard> {
-  return scryfall<ScryfallCard>(`/cards/${id}`);
+  const cacheKey = `${CARD_CACHE_PREFIX}${id}`;
+  const cachedCard = await getJsonFromRedis<ScryfallCard>(cacheKey);
+
+  if (cachedCard) {
+    return cachedCard;
+  }
+
+  const card = await scryfall<ScryfallCard>(`/cards/${id}`);
+  await setJsonInRedis(cacheKey, card, ONE_WEEK_IN_SECONDS);
+
+  return card;
 }
 
 export async function getCardRulings(

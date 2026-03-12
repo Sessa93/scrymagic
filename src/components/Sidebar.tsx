@@ -415,7 +415,7 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
               ) : null}
 
               {/* Child sets */}
-              {group.children.map((set, setIdx) => {
+              {group.children.map((set) => {
                 const flatIdx = allDisplaySets.findIndex(
                   (s) => s.code === set.code,
                 );
