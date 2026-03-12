@@ -20,6 +20,7 @@ sidecars/**/node_modules
 
 # production
 /build
+sidecars/**/dist
 
 # misc
 .DS_Store
