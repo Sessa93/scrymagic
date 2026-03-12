@@ -1,3 +1,5 @@
+import "server-only";
+
 import { createClient, type RedisClientType } from "redis";
 
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
