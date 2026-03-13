@@ -384,93 +384,101 @@ export default function Sidebar({ sets, selectedSet }: SidebarProps) {
       </div>
 
       <ul className="space-y-1" role="list">
-        {hierarchyDisplay.map((group) => (
-          <li key={group.parent?.code || "orphans"} className="space-y-1">
-            {/* Parent set header */}
-            {group.parent && open ? (
-              <Link
-                href={`/set/${group.parent.code}`}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors border ${
-                  selectedSet === group.parent.code
-                    ? "text-accent border-accent/40 bg-accent/10"
-                    : "text-muted/70 border-transparent hover:text-accent hover:bg-surface/60"
-                }`}
-                aria-current={
-                  selectedSet === group.parent.code ? "page" : undefined
-                }
-              >
-                <img
-                  src={group.parent.icon_svg_uri}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5 brightness-0 invert opacity-60"
-                />
-                {group.parent.name}
-              </Link>
-            ) : null}
+        {hierarchyDisplay.map((group) => {
+          const groupKey = group.parent
+            ? `parent-${group.parent.code}`
+            : `orphan-${group.children[0]?.code ?? "unknown"}`;
 
-            {/* Child sets */}
-            {group.children.map((set, setIdx) => {
-              const flatIdx = allDisplaySets.findIndex(
-                (s) => s.code === set.code,
-              );
-              return (
-                <div
-                  key={set.code}
-                  className={group.parent && open ? "pl-4" : ""}
+          return (
+            <li key={groupKey} className="space-y-1">
+              {/* Parent set header */}
+              {group.parent && open ? (
+                <Link
+                  href={`/set/${group.parent.code}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors border ${
+                    selectedSet === group.parent.code
+                      ? "text-accent border-accent/40 bg-accent/10"
+                      : "text-muted/70 border-transparent hover:text-accent hover:bg-surface/60"
+                  }`}
+                  aria-current={
+                    selectedSet === group.parent.code ? "page" : undefined
+                  }
                 >
-                  <Link
-                    href={`/set/${set.code}`}
-                    title={set.name}
-                    className={`group relative flex items-center gap-3 rounded-lg ${
-                      open ? "px-3 py-2" : "p-2 justify-center"
-                    } text-sm font-medium transition-colors ${
-                      selectedSet === set.code
-                        ? "bg-accent/20 border border-accent/40 text-foreground"
-                        : "text-foreground hover:bg-surface border border-transparent"
-                    }`}
-                    aria-current={selectedSet === set.code ? "page" : undefined}
-                    onKeyDown={(e) => onItemKeyDown(e, flatIdx)}
-                    tabIndex={focusIdx === flatIdx ? 0 : -1}
-                    ref={(el) => setListRef(el, flatIdx)}
+                  <img
+                    src={group.parent.icon_svg_uri}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 brightness-0 invert opacity-60"
+                  />
+                  {group.parent.name}
+                </Link>
+              ) : null}
+
+              {/* Child sets */}
+              {group.children.map((set) => {
+                const flatIdx = allDisplaySets.findIndex(
+                  (s) => s.code === set.code,
+                );
+                return (
+                  <div
+                    key={set.code}
+                    className={group.parent && open ? "pl-4" : ""}
                   >
-                    <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-md bg-surface ring-1 ring-inset ring-card-border">
-                      <img
-                        src={set.icon_svg_uri}
-                        alt={set.name}
-                        className="h-4 w-4 brightness-0 invert opacity-85 group-hover:opacity-100"
-                      />
-                      {!open ? (
-                        <span
-                          className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-sm bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
-                          aria-hidden="true"
-                          title={`${set.card_count} cards`}
-                        >
-                          {nfCompact.format(set.card_count)}
-                        </span>
+                    <Link
+                      href={`/set/${set.code}`}
+                      title={set.name}
+                      className={`group relative flex items-center gap-3 rounded-lg ${
+                        open ? "px-3 py-2" : "p-2 justify-center"
+                      } text-sm font-medium transition-colors ${
+                        selectedSet === set.code
+                          ? "bg-accent/20 border border-accent/40 text-foreground"
+                          : "text-foreground hover:bg-surface border border-transparent"
+                      }`}
+                      aria-current={
+                        selectedSet === set.code ? "page" : undefined
+                      }
+                      onKeyDown={(e) => onItemKeyDown(e, flatIdx)}
+                      tabIndex={focusIdx === flatIdx ? 0 : -1}
+                      ref={(el) => setListRef(el, flatIdx)}
+                    >
+                      <span className="relative inline-flex h-6 w-6 items-center justify-center rounded-md bg-surface ring-1 ring-inset ring-card-border">
+                        <img
+                          src={set.icon_svg_uri}
+                          alt={set.name}
+                          className="h-4 w-4 brightness-0 invert opacity-85 group-hover:opacity-100"
+                        />
+                        {!open ? (
+                          <span
+                            className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-sm bg-accent text-white px-1.5 h-4 min-w-4 text-[10px] font-semibold shadow"
+                            aria-hidden="true"
+                            title={`${set.card_count} cards`}
+                          >
+                            {nfCompact.format(set.card_count)}
+                          </span>
+                        ) : null}
+                      </span>
+                      {open ? (
+                        <>
+                          <span className="truncate flex-1">{set.name}</span>
+                          <span
+                            className={`ml-auto inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
+                              selectedSet === set.code
+                                ? "bg-accent text-white"
+                                : "bg-surface text-muted ring-1 ring-inset ring-card-border"
+                            }`}
+                            aria-label={`${set.card_count} cards`}
+                          >
+                            {set.card_count.toLocaleString()}
+                          </span>
+                        </>
                       ) : null}
-                    </span>
-                    {open ? (
-                      <>
-                        <span className="truncate flex-1">{set.name}</span>
-                        <span
-                          className={`ml-auto inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
-                            selectedSet === set.code
-                              ? "bg-accent text-white"
-                              : "bg-surface text-muted ring-1 ring-inset ring-card-border"
-                          }`}
-                          aria-label={`${set.card_count} cards`}
-                        >
-                          {set.card_count.toLocaleString()}
-                        </span>
-                      </>
-                    ) : null}
-                  </Link>
-                </div>
-              );
-            })}
-          </li>
-        ))}
+                    </Link>
+                  </div>
+                );
+              })}
+            </li>
+          );
+        })}
       </ul>
     </aside>
   );

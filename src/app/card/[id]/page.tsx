@@ -1,5 +1,4 @@
 import {
-  getCardById,
   getCardRulings,
   getCardPrints,
   getCardImage,
@@ -7,6 +6,7 @@ import {
   formatManaCost,
   ScryfallCard,
 } from "@/lib/scryfall";
+import { getCachedCardById } from "@/lib/scryfall-server";
 import Image from "next/image";
 import Link from "next/link";
 import ManaSymbol from "@/components/ManaSymbol";
@@ -25,7 +25,7 @@ export default async function CardPage({ params }: CardPageProps) {
 
   let card;
   try {
-    card = await getCardById(id);
+    card = await getCachedCardById(id);
   } catch {
     notFound();
   }

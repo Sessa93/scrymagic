@@ -149,10 +149,6 @@ export async function searchCards(
   );
 }
 
-export async function getCardById(id: string): Promise<ScryfallCard> {
-  return scryfall<ScryfallCard>(`/cards/${id}`);
-}
-
 export async function getCardRulings(
   id: string,
 ): Promise<{ data: ScryfallRuling[] }> {

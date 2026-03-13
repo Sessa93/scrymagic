@@ -9,3 +9,26 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
       OPENAI_MODEL: gpt-4o
+      REDIS_URL: redis://redis:6379
+
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    depends_on:
+      - redis
+    ports:
+      - 5540:5540
+    volumes:
+      - redis-insight-data:/data
+
+volumes:
+  redis-data:
+  redis-insight-data:
