@@ -57,37 +57,62 @@ export default function JobForm({
           />
         </label>
 
-        <div className="grid grid-cols-3 gap-2">
-          <label className="block text-xs uppercase text-slate-300">
-            Limit
-            <input
-              type="number"
-              className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
-              value={form.limit}
-              onChange={(e) => onChange({ ...form, limit: e.target.value })}
-            />
-          </label>
-          <label className="block text-xs uppercase text-slate-300">
-            Batch
-            <input
-              type="number"
-              className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
-              value={form.batchSize}
-              onChange={(e) => onChange({ ...form, batchSize: e.target.value })}
-            />
-          </label>
-          <label className="block text-xs uppercase text-slate-300">
-            Workers
-            <input
-              type="number"
-              className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
-              value={form.workerCount}
-              onChange={(e) =>
-                onChange({ ...form, workerCount: e.target.value })
-              }
-            />
-          </label>
-        </div>
+        <label className="block text-xs uppercase text-slate-300">
+          Job Type
+          <select
+            className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
+            value={form.jobType}
+            onChange={(e) =>
+              onChange({
+                ...form,
+                jobType: e.target.value as
+                  | "recommender_scryfall_ingest"
+                  | "ingest_set_icons",
+              })
+            }
+          >
+            <option value="recommender_scryfall_ingest">
+              Recommender — Scryfall Ingest
+            </option>
+            <option value="ingest_set_icons">Set Icon Ingestion</option>
+          </select>
+        </label>
+
+        {form.jobType === "recommender_scryfall_ingest" && (
+          <div className="grid grid-cols-3 gap-2">
+            <label className="block text-xs uppercase text-slate-300">
+              Limit
+              <input
+                type="number"
+                className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
+                value={form.limit}
+                onChange={(e) => onChange({ ...form, limit: e.target.value })}
+              />
+            </label>
+            <label className="block text-xs uppercase text-slate-300">
+              Batch
+              <input
+                type="number"
+                className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
+                value={form.batchSize}
+                onChange={(e) =>
+                  onChange({ ...form, batchSize: e.target.value })
+                }
+              />
+            </label>
+            <label className="block text-xs uppercase text-slate-300">
+              Workers
+              <input
+                type="number"
+                className="mt-1 w-full rounded border border-slate-500/50 bg-slate-950/70 px-3 py-2"
+                value={form.workerCount}
+                onChange={(e) =>
+                  onChange({ ...form, workerCount: e.target.value })
+                }
+              />
+            </label>
+          </div>
+        )}
 
         <label className="flex items-center gap-2 text-sm">
           <input

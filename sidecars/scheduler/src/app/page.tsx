@@ -119,16 +119,6 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 md:px-10">
-      <header className="mb-8">
-        <div className="scheduler-eyebrow mb-2">Dashboard</div>
-        <h1 className="scheduler-title">Scheduled Jobs and Global History</h1>
-        <p className="mt-3 max-w-3xl text-[0.96rem] leading-6 text-slate-300">
-          See all configured jobs at a glance and inspect the latest execution
-          history. Select any job from the tables below to open its dedicated
-          details page.
-        </p>
-      </header>
-
       {error ? (
         <div className="mb-6 rounded border border-red-500/50 bg-red-900/20 px-4 py-3 text-sm text-red-200">
           {error}

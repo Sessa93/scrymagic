@@ -36,6 +36,7 @@ services:
     environment:
       DATABASE_URL: postgres://scheduler:scheduler@scheduler-db:5432/scrymagic_scheduler
       RECOMMENDER_API_BASE_URL: http://recommender:3001
+      WEBAPP_BASE_URL: http://webapp:3000
       SCHEDULER_TICK_MS: 15000
       RECOMMENDER_POLL_MS: 5000
       RECOMMENDER_MAX_POLL_MS: 3600000

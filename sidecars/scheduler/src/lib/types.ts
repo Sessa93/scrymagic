@@ -1,4 +1,4 @@
-export type JobType = "recommender_scryfall_ingest";
+export type JobType = "recommender_scryfall_ingest" | "ingest_set_icons";
 export type RunStatus = "running" | "completed" | "failed" | "cancelled";
 
 export interface JobConfig {

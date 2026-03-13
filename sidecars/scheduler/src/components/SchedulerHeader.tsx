@@ -8,7 +8,7 @@ export default function SchedulerHeader() {
           <div className="scheduler-eyebrow mb-2">Sidecar Control Center</div>
           <Link
             href="/"
-            className="scheduler-title scheduler-link block text-[1.6rem] max-w-[18ch]"
+            className="scheduler-title scheduler-link block text-[1.6rem] whitespace-nowrap"
           >
             ScryMagic Scheduler
           </Link>

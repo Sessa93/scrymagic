@@ -4,7 +4,7 @@ export type Job = {
   enabled: boolean;
   cronExpression: string;
   timezone: string;
-  jobType: "recommender_scryfall_ingest";
+  jobType: "recommender_scryfall_ingest" | "ingest_set_icons";
   config: { limit?: number; batchSize?: number; workerCount?: number };
   nextRunAt: string | null;
   lastRunAt: string | null;
@@ -29,6 +29,7 @@ export type JobFormState = {
   cronExpression: string;
   timezone: string;
   enabled: boolean;
+  jobType: "recommender_scryfall_ingest" | "ingest_set_icons";
   limit: string;
   batchSize: string;
   workerCount: string;
@@ -39,6 +40,7 @@ export const DEFAULT_FORM: JobFormState = {
   cronExpression: "0 * * * *",
   timezone: "UTC",
   enabled: true,
+  jobType: "recommender_scryfall_ingest",
   limit: "",
   batchSize: "256",
   workerCount: "4",
@@ -55,6 +57,7 @@ export function jobToFormState(job: Job): JobFormState {
     cronExpression: job.cronExpression,
     timezone: job.timezone,
     enabled: job.enabled,
+    jobType: job.jobType,
     limit: job.config.limit?.toString() ?? "",
     batchSize: job.config.batchSize?.toString() ?? "",
     workerCount: job.config.workerCount?.toString() ?? "",
@@ -67,7 +70,7 @@ export function formStateToPayload(form: JobFormState) {
     enabled: form.enabled,
     cronExpression: form.cronExpression,
     timezone: form.timezone,
-    jobType: "recommender_scryfall_ingest" as const,
+    jobType: form.jobType,
     config: {
       ...(form.limit ? { limit: Number(form.limit) } : {}),
       ...(form.batchSize ? { batchSize: Number(form.batchSize) } : {}),

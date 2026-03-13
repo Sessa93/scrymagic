@@ -11,6 +11,8 @@ import type { JobRun, SchedulerJob } from "@/lib/types";
 
 const RECOMMENDER_BASE_URL =
   process.env.RECOMMENDER_API_BASE_URL ?? "http://127.0.0.1:3001";
+const WEBAPP_BASE_URL =
+  process.env.WEBAPP_BASE_URL ?? "http://127.0.0.1:3000";
 const TICK_MS = Number(process.env.SCHEDULER_TICK_MS ?? 15000);
 const POLL_MS = Number(process.env.RECOMMENDER_POLL_MS ?? 5000);
 const MAX_POLL_MS = Number(
@@ -94,10 +96,21 @@ async function executeJob(job: SchedulerJob): Promise<{
   externalJobId?: string;
   details?: Record<string, unknown>;
 }> {
-  if (job.jobType !== "recommender_scryfall_ingest") {
-    throw new Error(`Unsupported job type: ${job.jobType}`);
+  if (job.jobType === "recommender_scryfall_ingest") {
+    return executeRecommenderIngest(job);
   }
+  if (job.jobType === "ingest_set_icons") {
+    return executeSetIconIngestion();
+  }
+  throw new Error(`Unsupported job type: ${job.jobType}`);
+}
 
+async function executeRecommenderIngest(job: SchedulerJob): Promise<{
+  status: JobRun["status"];
+  message: string;
+  externalJobId?: string;
+  details?: Record<string, unknown>;
+}> {
   const startResponse = await fetch(
     `${RECOMMENDER_BASE_URL}/api/recommender/ingest/scryfall/start`,
     {
@@ -175,6 +188,75 @@ async function executeJob(job: SchedulerJob): Promise<{
   }
 
   throw new Error("Timed out waiting for recommender ingestion completion");
+}
+
+async function executeSetIconIngestion(): Promise<{
+  status: JobRun["status"];
+  message: string;
+  externalJobId?: string;
+  details?: Record<string, unknown>;
+}> {
+  const startResponse = await fetch(
+    `${WEBAPP_BASE_URL}/api/icon-ingestion/start`,
+    { method: "POST", headers: { "content-type": "application/json" } },
+  );
+
+  if (!startResponse.ok) {
+    const text = await startResponse.text();
+    throw new Error(
+      `Failed to start icon ingestion (${startResponse.status}): ${text}`,
+    );
+  }
+
+  const startBody = (await startResponse.json()) as { jobId: string };
+  const externalJobId = startBody.jobId;
+  if (!externalJobId) {
+    throw new Error("Icon ingestion start response missing jobId");
+  }
+
+  const pollStartedAt = Date.now();
+  while (Date.now() - pollStartedAt < MAX_POLL_MS) {
+    await sleep(POLL_MS);
+
+    const statusResponse = await fetch(
+      `${WEBAPP_BASE_URL}/api/icon-ingestion/status/${externalJobId}`,
+      { headers: { Accept: "application/json" } },
+    );
+
+    if (!statusResponse.ok) {
+      throw new Error(
+        `Failed to poll icon ingestion status (${statusResponse.status})`,
+      );
+    }
+
+    const statusBody = (await statusResponse.json()) as {
+      status: "running" | "completed" | "failed";
+      message?: string;
+      [key: string]: unknown;
+    };
+
+    if (statusBody.status === "running") {
+      continue;
+    }
+
+    if (statusBody.status === "completed") {
+      return {
+        status: "completed",
+        message: statusBody.message ?? "Icon ingestion completed",
+        externalJobId,
+        details: statusBody,
+      };
+    }
+
+    return {
+      status: "failed",
+      message: statusBody.message ?? "Icon ingestion failed",
+      externalJobId,
+      details: statusBody,
+    };
+  }
+
+  throw new Error("Timed out waiting for icon ingestion completion");
 }
 
 function sleep(ms: number): Promise<void> {
