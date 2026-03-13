@@ -13,6 +13,7 @@ import ManaSymbol from "@/components/ManaSymbol";
 import ScryfallText, { buildSymbolDictionary } from "@/components/ScryfallText";
 import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
+import OtherPrintingsStrip from "@/components/OtherPrintingsStrip";
 import { notFound } from "next/navigation";
 
 interface CardPageProps {
@@ -38,10 +39,21 @@ export default async function CardPage({ params }: CardPageProps) {
   }
 
   let alternatePrints: ScryfallCard[] = [];
+  let localizedPrints: ScryfallCard[] = [];
   try {
     if (card.prints_search_uri) {
       const printsData = await getCardPrints(card.prints_search_uri);
-      alternatePrints = printsData.data.filter((p) => p.id !== card.id);
+      const allPrints = printsData.data;
+      alternatePrints = allPrints.filter((p) => p.id !== card.id);
+      localizedPrints = allPrints
+        .filter((p) => isSameLocalizedPrinting(p, card))
+        .sort((a, b) => {
+          if (a.id === card.id) return -1;
+          if (b.id === card.id) return 1;
+          return getLanguageLabel(a.lang).localeCompare(
+            getLanguageLabel(b.lang),
+          );
+        });
     }
   } catch {
     // Prints may not be available
@@ -92,6 +104,17 @@ export default async function CardPage({ params }: CardPageProps) {
             </div>
           )}
 
+          {alternatePrints.length > 0 && (
+            <div className="w-full">
+              <div className="rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
+                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  Other Printings ({alternatePrints.length})
+                </h2>
+                <OtherPrintingsStrip prints={alternatePrints} />
+              </div>
+            </div>
+          )}
+
           {/* Second face for double-faced cards */}
           {card.card_faces && card.card_faces[1]?.image_uris && (
             <div className="overflow-hidden rounded-md bg-surface shadow-2xl">
@@ -105,6 +128,58 @@ export default async function CardPage({ params }: CardPageProps) {
                 height={530}
                 className="block w-full rounded-md"
               />
+            </div>
+          )}
+
+          {localizedPrints.length > 0 && (
+            <div className="w-full rounded-xl border border-card-border bg-card-bg p-3">
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Available Localizations
+              </h2>
+              <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                {localizedPrints.map((print) => {
+                  const localizedImage = getCardImage(print, "small");
+                  const languageLabel = getLanguageLabel(print.lang);
+                  const isCurrent = print.id === card.id;
+
+                  return (
+                    <Link
+                      key={print.id}
+                      href={`/card/${print.id}`}
+                      className={`flex items-center gap-2 rounded-sm border px-2 py-1.5 transition-colors ${
+                        isCurrent
+                          ? "border-accent/70 bg-accent/12"
+                          : "border-card-border bg-surface hover:border-accent/45 hover:bg-surface-elevated"
+                      }`}
+                    >
+                      <div className="h-14 w-10 shrink-0 overflow-hidden rounded-xs bg-surface-elevated">
+                        {localizedImage ? (
+                          <Image
+                            src={localizedImage}
+                            alt={`${print.name} (${languageLabel})`}
+                            width={40}
+                            height={56}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[9px] text-muted">
+                            N/A
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                          {languageLabel}
+                          {isCurrent ? " • Current" : ""}
+                        </div>
+                        <p className="truncate text-xs text-foreground">
+                          {print.printed_name || print.name}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -345,56 +420,6 @@ export default async function CardPage({ params }: CardPageProps) {
           )}
         </div>
       </div>
-
-      {/* Other Printings */}
-      {alternatePrints.length > 0 && (
-        <div className="mt-12">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">
-            Other Printings ({alternatePrints.length})
-          </h2>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {alternatePrints.map((print) => {
-              const printImage = getCardImage(print, "small");
-              return (
-                <Link
-                  key={print.id}
-                  href={`/card/${print.id}`}
-                  className="group shrink-0 w-30"
-                >
-                  <div className="overflow-hidden rounded-md bg-surface shadow-md transition-transform group-hover:scale-105">
-                    {printImage ? (
-                      <Image
-                        src={printImage}
-                        alt={`${print.name} — ${print.set_name}`}
-                        width={120}
-                        height={167}
-                        className="block w-full"
-                      />
-                    ) : (
-                      <div className="flex h-41.75 items-center justify-center bg-surface text-xs text-muted">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-1.5 px-0.5">
-                    <p className="truncate text-xs font-medium text-foreground">
-                      <ScryfallText
-                        text={print.set_name}
-                        symbols={symbolDictionary}
-                        symbolClassName="mx-0.5 inline-block h-[1em] w-[1em] align-[-0.15em]"
-                      />
-                    </p>
-                    <p className="text-[11px] text-muted">
-                      #{print.collector_number} &middot;{" "}
-                      <span className="capitalize">{print.rarity}</span>
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -473,4 +498,47 @@ function PriceBadge({ label, value }: { label: string; value: string }) {
 
 function buildSearchHref(query: string): string {
   return `/search?q=${encodeURIComponent(query)}&original=${encodeURIComponent(query)}`;
+}
+
+function isSameLocalizedPrinting(
+  candidate: ScryfallCard,
+  source: ScryfallCard,
+) {
+  if (candidate.set !== source.set) {
+    return false;
+  }
+
+  if (candidate.collector_number && source.collector_number) {
+    return candidate.collector_number === source.collector_number;
+  }
+
+  return candidate.name === source.name;
+}
+
+function getLanguageLabel(langCode?: string): string {
+  const labelByCode: Record<string, string> = {
+    en: "English",
+    es: "Spanish",
+    fr: "French",
+    de: "German",
+    it: "Italian",
+    pt: "Portuguese",
+    ja: "Japanese",
+    ko: "Korean",
+    ru: "Russian",
+    zhs: "Chinese (Simplified)",
+    zht: "Chinese (Traditional)",
+    he: "Hebrew",
+    la: "Latin",
+    grc: "Ancient Greek",
+    ar: "Arabic",
+    sa: "Sanskrit",
+    ph: "Phyrexian",
+  };
+
+  if (!langCode) {
+    return "Unknown";
+  }
+
+  return labelByCode[langCode] || langCode.toUpperCase();
 }

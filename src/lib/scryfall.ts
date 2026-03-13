@@ -15,6 +15,8 @@ export interface ScryfallCard {
   color_identity: string[];
   set: string;
   set_name: string;
+  lang?: string;
+  printed_name?: string;
   rarity: string;
   image_uris?: {
     small: string;
