@@ -22,7 +22,9 @@ export default function OtherPrintingsStrip({
 
   return (
     <div
-      className="relative w-full max-w-full min-w-0 overflow-visible"
+      className={`relative w-full max-w-full min-w-0 overflow-visible ${
+        activePrint ? "z-130" : ""
+      }`}
       onMouseLeave={() => {
         setActivePrintId(null);
         setIsPopupHovered(false);
@@ -81,7 +83,7 @@ export default function OtherPrintingsStrip({
       </div>
 
       {activePrint ? (
-        <div className="absolute top-2 right-0 z-120 max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-visible [scrollbar-width:thin]">
+        <div className="absolute top-2 right-0 z-140 max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-visible [scrollbar-width:thin]">
           <Link
             href={`/card/${activePrint.id}`}
             className="relative flex w-max items-start overflow-visible"

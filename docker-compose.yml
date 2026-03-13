@@ -10,6 +10,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
       OPENAI_MODEL: gpt-4o
       REDIS_URL: redis://redis:6379
+      RECOMMENDER_API_BASE_URL: http://recommender:3001
     volumes:
       - nextjs-image-cache:/app/.next/cache/images
 

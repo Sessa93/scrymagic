@@ -7,6 +7,11 @@ import {
   proxyScryfallImageUrl,
   ScryfallCard,
 } from "@/lib/scryfall";
+import {
+  getOracleRecommendations,
+  getVisualRecommendations,
+  type RecommendedCard,
+} from "@/lib/recommender";
 import { getCachedCardById } from "@/lib/scryfall-server";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,6 +20,7 @@ import ScryfallText, { buildSymbolDictionary } from "@/components/ScryfallText";
 import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
 import OtherPrintingsStrip from "@/components/OtherPrintingsStrip";
+import RecommendedCardsStrip from "@/components/RecommendedCardsStrip";
 import { notFound } from "next/navigation";
 
 interface CardPageProps {
@@ -75,6 +81,21 @@ export default async function CardPage({ params }: CardPageProps) {
     card.oracle_text ||
     card.card_faces?.map((f) => f.oracle_text).join("\n\n---\n\n") ||
     "";
+
+  let visualSimilarCards: RecommendedCard[] = [];
+  let oracleSimilarCards: RecommendedCard[] = [];
+  try {
+    const [visual, oracle] = await Promise.all([
+      getVisualRecommendations(card.id, 5),
+      oracleText.trim()
+        ? getOracleRecommendations(oracleText, card.id, 5)
+        : Promise.resolve([]),
+    ]);
+    visualSimilarCards = visual;
+    oracleSimilarCards = oracle;
+  } catch {
+    // Recommender service may be unavailable; keep page rendering without these boxes.
+  }
 
   const typeLine =
     card.type_line ||
@@ -387,13 +408,25 @@ export default async function CardPage({ params }: CardPageProps) {
           )}
 
           {alternatePrints.length > 0 && (
-            <div className="rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
+            <div className="relative overflow-visible rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
               <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
                 Other Printings ({alternatePrints.length})
               </h2>
               <OtherPrintingsStrip prints={alternatePrints} />
             </div>
           )}
+
+          <RecommendedCardsStrip
+            title="Visually Similar Cards"
+            cards={visualSimilarCards}
+            emptyMessage="No visual recommendations available yet."
+          />
+
+          <RecommendedCardsStrip
+            title="Cards With Similar Oracle Text"
+            cards={oracleSimilarCards}
+            emptyMessage="No oracle-text recommendations available yet."
+          />
 
           {/* Rulings */}
           {rulings.length > 0 && (
