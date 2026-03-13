@@ -10,6 +10,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your_openai_api_key_here}
       OPENAI_MODEL: gpt-4o
       REDIS_URL: redis://redis:6379
+    volumes:
+      - nextjs-image-cache:/app/.next/cache/images
 
   recommender:
     build:
@@ -103,3 +105,4 @@ volumes:
   redis-insight-data:
   recommender_pgdata_pg18:
   scheduler_pgdata_pg18:
+  nextjs-image-cache:

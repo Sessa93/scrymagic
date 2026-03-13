@@ -4,6 +4,7 @@ import {
   getCardImage,
   getCardSymbols,
   formatManaCost,
+  proxyScryfallImageUrl,
   ScryfallCard,
 } from "@/lib/scryfall";
 import { getCachedCardById } from "@/lib/scryfall-server";
@@ -108,10 +109,10 @@ export default async function CardPage({ params }: CardPageProps) {
           {card.card_faces && card.card_faces[1]?.image_uris && (
             <div className="overflow-hidden rounded-md bg-surface shadow-2xl">
               <Image
-                src={
+                src={proxyScryfallImageUrl(
                   card.card_faces[1].image_uris.png ||
-                  card.card_faces[1].image_uris.large
-                }
+                    card.card_faces[1].image_uris.large,
+                )}
                 alt={card.card_faces[1].name}
                 width={380}
                 height={530}

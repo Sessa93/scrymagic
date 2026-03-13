@@ -186,17 +186,33 @@ export async function autocomplete(query: string): Promise<{ data: string[] }> {
   return scryfall<{ data: string[] }>(`/cards/autocomplete?q=${encoded}`);
 }
 
+/**
+ * Returns a raw Scryfall CDN URL for the given card and size.
+ * Prefer getCardImage() for rendering — it routes through the local proxy.
+ */
+export function proxyScryfallImageUrl(url: string): string {
+  if (!url) return "";
+  return `/api/img?url=${encodeURIComponent(url)}`;
+}
+
+/**
+ * Returns the proxied (/api/img) URL for a card image so all image traffic
+ * flows through the local pull-through cache instead of hitting Scryfall
+ * directly on every request.
+ */
 export function getCardImage(
   card: ScryfallCard,
   size: "small" | "normal" | "large" | "png" | "art_crop" = "normal",
 ): string {
+  let raw: string;
   if (card.image_uris) {
-    return card.image_uris[size];
+    raw = card.image_uris[size];
+  } else if (card.card_faces && card.card_faces[0]?.image_uris) {
+    raw = card.card_faces[0].image_uris[size];
+  } else {
+    return "";
   }
-  if (card.card_faces && card.card_faces[0]?.image_uris) {
-    return card.card_faces[0].image_uris[size];
-  }
-  return "";
+  return proxyScryfallImageUrl(raw);
 }
 
 export function formatManaCost(manaCost: string | undefined): string[] {

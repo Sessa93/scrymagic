@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
+    minimumCacheTTL: 2_592_000, // 30 days
+    localPatterns: [
+      {
+        pathname: "/api/img",
+        // omitting `search` allows any query string (Next.js docs behaviour)
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",
