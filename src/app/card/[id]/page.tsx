@@ -221,7 +221,7 @@ export default async function CardPage({ params }: CardPageProps) {
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted">
                 Oracle Text
               </h2>
-              <div className="space-y-2 text-foreground leading-relaxed">
+              <div className="space-y-2 text-foreground leading-relaxed font-elvish text-[0.92rem]">
                 {oracleText.split("\n").map((line, i) => (
                   <p key={i}>
                     <ScryfallText
@@ -407,7 +407,7 @@ export default async function CardPage({ params }: CardPageProps) {
                     key={i}
                     className="rounded-xl border border-card-border bg-card-bg p-4"
                   >
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-sm text-foreground leading-relaxed font-elvish">
                       <ScryfallText
                         text={ruling.comment}
                         symbols={symbolDictionary}
