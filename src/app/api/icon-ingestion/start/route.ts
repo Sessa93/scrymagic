@@ -14,7 +14,10 @@ export async function POST(): Promise<NextResponse> {
     const existing = iconIngestionJobs.get(activeIconIngestionJobId);
     if (existing?.status === "running") {
       return NextResponse.json(
-        { error: "Icon ingestion is already running", jobId: activeIconIngestionJobId },
+        {
+          error: "Icon ingestion is already running",
+          jobId: activeIconIngestionJobId,
+        },
         { status: 409 },
       );
     }
@@ -30,7 +33,11 @@ export async function POST(): Promise<NextResponse> {
   iconIngestionJobs.set(jobId, entry);
   setActiveIconIngestionJobId(jobId);
 
-  const scriptPath = path.join(process.cwd(), "scripts", "pull-rarity-icons.mjs");
+  const scriptPath = path.join(
+    process.cwd(),
+    "scripts",
+    "pull-rarity-icons.mjs",
+  );
 
   const child = spawn(process.execPath, [scriptPath], {
     cwd: process.cwd(),

@@ -11,8 +11,7 @@ import type { JobRun, SchedulerJob } from "@/lib/types";
 
 const RECOMMENDER_BASE_URL =
   process.env.RECOMMENDER_API_BASE_URL ?? "http://127.0.0.1:3001";
-const WEBAPP_BASE_URL =
-  process.env.WEBAPP_BASE_URL ?? "http://127.0.0.1:3000";
+const WEBAPP_BASE_URL = process.env.WEBAPP_BASE_URL ?? "http://127.0.0.1:3000";
 const TICK_MS = Number(process.env.SCHEDULER_TICK_MS ?? 15000);
 const POLL_MS = Number(process.env.RECOMMENDER_POLL_MS ?? 5000);
 const MAX_POLL_MS = Number(
