@@ -43,18 +43,23 @@ export default async function CardPage({ params }: CardPageProps) {
   let localizedPrints: ScryfallCard[] = [];
   try {
     if (card.prints_search_uri) {
-      const printsData = await getCardPrints(card.prints_search_uri);
-      const allPrints = printsData.data;
-      alternatePrints = allPrints.filter((p) => p.id !== card.id);
-      localizedPrints = allPrints
-        .filter((p) => isSameLocalizedPrinting(p, card))
-        .sort((a, b) => {
-          if (a.id === card.id) return -1;
-          if (b.id === card.id) return 1;
-          return getLanguageLabel(a.lang).localeCompare(
-            getLanguageLabel(b.lang),
-          );
-        });
+      // Build a separate URL for localizations: same oracle ID, same set, any language.
+      // prints_search_uri uses unique=prints which excludes multilingual variants by default.
+      const locUrl = new URL(card.prints_search_uri);
+      const existingQ = locUrl.searchParams.get("q") ?? "";
+      locUrl.searchParams.set("q", `${existingQ} set:${card.set} lang:any`);
+
+      const [printsData, locData] = await Promise.all([
+        getCardPrints(card.prints_search_uri),
+        getCardPrints(locUrl.toString()),
+      ]);
+
+      alternatePrints = printsData.data.filter((p) => p.id !== card.id);
+      localizedPrints = locData.data.sort((a, b) => {
+        if (a.id === card.id) return -1;
+        if (b.id === card.id) return 1;
+        return getLanguageLabel(a.lang).localeCompare(getLanguageLabel(b.lang));
+      });
     }
   } catch {
     // Prints may not be available
@@ -497,21 +502,6 @@ function PriceBadge({ label, value }: { label: string; value: string }) {
 
 function buildSearchHref(query: string): string {
   return `/search?q=${encodeURIComponent(query)}&original=${encodeURIComponent(query)}`;
-}
-
-function isSameLocalizedPrinting(
-  candidate: ScryfallCard,
-  source: ScryfallCard,
-) {
-  if (candidate.set !== source.set) {
-    return false;
-  }
-
-  if (candidate.collector_number && source.collector_number) {
-    return candidate.collector_number === source.collector_number;
-  }
-
-  return candidate.name === source.name;
 }
 
 function getLanguageLabel(langCode?: string): string {
