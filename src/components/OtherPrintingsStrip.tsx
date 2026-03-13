@@ -10,18 +10,25 @@ export default function OtherPrintingsStrip({
 }: {
   prints: ScryfallCard[];
 }) {
-  const [activePrintId, setActivePrintId] = useState<string | null>(
-    prints[0]?.id ?? null,
-  );
+  const [activePrintId, setActivePrintId] = useState<string | null>(null);
+  const [isPopupHovered, setIsPopupHovered] = useState(false);
   const activePrint = useMemo(
     () =>
-      prints.find((print) => print.id === activePrintId) ?? prints[0] ?? null,
+      activePrintId
+        ? (prints.find((print) => print.id === activePrintId) ?? null)
+        : null,
     [activePrintId, prints],
   );
 
   return (
-    <div className="relative">
-      <div className="flex gap-4 overflow-x-auto pb-4">
+    <div
+      className="relative w-full max-w-full min-w-0 overflow-visible"
+      onMouseLeave={() => {
+        setActivePrintId(null);
+        setIsPopupHovered(false);
+      }}
+    >
+      <div className="flex w-full max-w-full min-w-0 gap-4 overflow-x-auto pb-4">
         {prints.map((print) => {
           const printImage = getCardImage(print, "small");
           const isActive = activePrint?.id === print.id;
@@ -31,8 +38,14 @@ export default function OtherPrintingsStrip({
               key={print.id}
               href={`/card/${print.id}`}
               className="group shrink-0 w-30"
-              onMouseEnter={() => setActivePrintId(print.id)}
-              onFocus={() => setActivePrintId(print.id)}
+              onMouseEnter={() => {
+                setActivePrintId(print.id);
+                setIsPopupHovered(true);
+              }}
+              onFocus={() => {
+                setActivePrintId(print.id);
+                setIsPopupHovered(true);
+              }}
             >
               <div
                 className={`overflow-hidden rounded-md bg-surface shadow-md transition-transform duration-200 ${
@@ -68,12 +81,20 @@ export default function OtherPrintingsStrip({
       </div>
 
       {activePrint ? (
-        <div className="absolute top-2 right-2 z-40">
+        <div className="absolute top-2 right-0 z-120 max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-visible [scrollbar-width:thin]">
           <Link
             href={`/card/${activePrint.id}`}
-            className="group/popup relative block"
+            className="relative flex w-max items-start overflow-visible"
+            onMouseEnter={() => setIsPopupHovered(true)}
+            onMouseLeave={() => setIsPopupHovered(false)}
+            onFocus={() => setIsPopupHovered(true)}
+            onBlur={() => setIsPopupHovered(false)}
           >
-            <div className="w-55 overflow-hidden rounded-[18px] border border-card-border bg-surface/95 p-2 shadow-2xl backdrop-blur-sm transition-transform duration-200 group-hover/popup:scale-[1.015]">
+            <div
+              className={`w-55 overflow-hidden rounded-[18px] border border-card-border bg-surface/95 p-2 shadow-2xl backdrop-blur-sm transition-transform duration-200 ${
+                isPopupHovered ? "scale-[1.015]" : ""
+              }`}
+            >
               <div className="overflow-hidden rounded-md bg-card-bg">
                 {getCardImage(activePrint, "normal") ? (
                   <Image
@@ -99,31 +120,42 @@ export default function OtherPrintingsStrip({
               </div>
             </div>
 
-            <div className="pointer-events-none absolute top-0 left-full ml-1 w-0 overflow-hidden opacity-0 transition-all duration-250 ease-out group-hover/popup:w-52 group-hover/popup:opacity-100">
+            <div
+              className={`overflow-hidden transition-[max-width,opacity] duration-200 ease-out ${
+                isPopupHovered
+                  ? "max-w-52 opacity-100 pointer-events-auto"
+                  : "max-w-0 opacity-0 pointer-events-none"
+              }`}
+            >
               <div className="h-full rounded-2xl border border-card-border bg-surface/95 p-3 shadow-2xl backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
                   Printing Details
                 </p>
                 <div className="mt-2 space-y-1.5 text-xs">
                   <p className="text-foreground">
-                    <span className="text-muted">Set:</span> {activePrint.set_name}
+                    <span className="text-muted">Set:</span>{" "}
+                    {activePrint.set_name}
                   </p>
                   <p className="text-foreground">
                     <span className="text-muted">Collector:</span> #
                     {activePrint.collector_number ?? "-"}
                   </p>
                   <p className="text-foreground capitalize">
-                    <span className="text-muted">Rarity:</span> {activePrint.rarity}
+                    <span className="text-muted">Rarity:</span>{" "}
+                    {activePrint.rarity}
                   </p>
                   <p className="text-foreground">
                     <span className="text-muted">Language:</span>{" "}
                     {formatLanguageCode(activePrint.lang)}
                   </p>
                 </div>
-                <p className="mt-3 text-[11px] text-accent">Open this printing</p>
+                <p className="mt-3 text-[11px] text-accent">
+                  Open this printing
+                </p>
               </div>
             </div>
           </Link>
+          <div className="pointer-events-none absolute top-0 right-0 h-full w-6 bg-linear-to-l from-card-bg/85 to-transparent" />
         </div>
       ) : null}
     </div>

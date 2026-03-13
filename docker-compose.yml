@@ -11,23 +11,6 @@ services:
       OPENAI_MODEL: gpt-4o
       REDIS_URL: redis://redis:6379
 
-  recommender-db:
-    image: pgvector/pgvector:pg18
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: scrymagic_recommender
-      POSTGRES_USER: recommender
-      POSTGRES_PASSWORD: recommender
-    ports:
-      - 5432:5432
-    volumes:
-      - recommender_pgdata_pg18:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U recommender -d scrymagic_recommender"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   recommender:
     build:
       context: ./sidecars/recommender
@@ -42,23 +25,6 @@ services:
     depends_on:
       recommender-db:
         condition: service_healthy
-
-  scheduler-db:
-    image: postgres:18
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: scrymagic_scheduler
-      POSTGRES_USER: scheduler
-      POSTGRES_PASSWORD: scheduler
-    ports:
-      - 5434:5432
-    volumes:
-      - scheduler_pgdata_pg18:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U scheduler -d scrymagic_scheduler"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   scheduler:
     build:
@@ -98,8 +64,42 @@ services:
     volumes:
       - redis-insight-data:/data
 
+  recommender-db:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scrymagic_recommender
+      POSTGRES_USER: recommender
+      POSTGRES_PASSWORD: recommender
+    ports:
+      - 5432:5432
+    volumes:
+      - recommender_pgdata_pg18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recommender -d scrymagic_recommender"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scheduler-db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scrymagic_scheduler
+      POSTGRES_USER: scheduler
+      POSTGRES_PASSWORD: scheduler
+    ports:
+      - 5434:5432
+    volumes:
+      - scheduler_pgdata_pg18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduler -d scrymagic_scheduler"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
-  recommender_pgdata_pg18:
-  scheduler_pgdata_pg18:
   redis-data:
   redis-insight-data:
+  recommender_pgdata_pg18:
+  scheduler_pgdata_pg18:

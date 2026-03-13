@@ -104,17 +104,6 @@ export default async function CardPage({ params }: CardPageProps) {
             </div>
           )}
 
-          {alternatePrints.length > 0 && (
-            <div className="w-full">
-              <div className="rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-                  Other Printings ({alternatePrints.length})
-                </h2>
-                <OtherPrintingsStrip prints={alternatePrints} />
-              </div>
-            </div>
-          )}
-
           {/* Second face for double-faced cards */}
           {card.card_faces && card.card_faces[1]?.image_uris && (
             <div className="overflow-hidden rounded-md bg-surface shadow-2xl">
@@ -194,7 +183,7 @@ export default async function CardPage({ params }: CardPageProps) {
         </div>
 
         {/* Card Details */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Header */}
           <div>
             <div className="flex flex-wrap items-start gap-3">
@@ -388,6 +377,15 @@ export default async function CardPage({ params }: CardPageProps) {
                   <PriceBadge label="MTGO" value={`${card.prices.tix} tix`} />
                 )}
               </div>
+            </div>
+          )}
+
+          {alternatePrints.length > 0 && (
+            <div className="rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Other Printings ({alternatePrints.length})
+              </h2>
+              <OtherPrintingsStrip prints={alternatePrints} />
             </div>
           )}
 
