@@ -42,5 +42,43 @@ services:
       recommender-db:
         condition: service_healthy
 
+  scheduler-db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scrymagic_scheduler
+      POSTGRES_USER: scheduler
+      POSTGRES_PASSWORD: scheduler
+    ports:
+      - 5434:5432
+    volumes:
+      - scheduler_pgdata_pg18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduler -d scrymagic_scheduler"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scheduler:
+    build:
+      context: ./sidecars/scheduler
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://scheduler:scheduler@scheduler-db:5432/scrymagic_scheduler
+      RECOMMENDER_API_BASE_URL: http://recommender:3001
+      SCHEDULER_TICK_MS: 15000
+      RECOMMENDER_POLL_MS: 5000
+      RECOMMENDER_MAX_POLL_MS: 3600000
+      PORT: 3002
+    ports:
+      - 3002:3002
+    depends_on:
+      scheduler-db:
+        condition: service_healthy
+      recommender:
+        condition: service_started
+
 volumes:
   recommender_pgdata_pg18:
+  scheduler_pgdata_pg18:
