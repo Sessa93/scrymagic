@@ -89,6 +89,7 @@ const providers: NextAuthOptions["providers"] = [
         id: user.id,
         email: user.email,
         name: user.name ?? user.username ?? undefined,
+        username: user.username ?? undefined,
         image: user.image ?? undefined,
         role: user.role,
       };
@@ -150,12 +151,27 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
       }
 
-      if (!token.role && token.sub) {
+      if (user && "username" in user && typeof user.username === "string") {
+        token.username = user.username;
+      }
+
+      if (token.sub) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { role: true },
+          select: {
+            role: true,
+            username: true,
+            name: true,
+            email: true,
+          },
         });
-        token.role = dbUser?.role;
+
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.username = dbUser.username ?? undefined;
+          token.name = dbUser.name ?? token.name;
+          token.email = dbUser.email ?? token.email;
+        }
       }
 
       return token;
@@ -168,6 +184,17 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.role =
           typeof token.role === "string" ? token.role : "USER";
+
+        session.user.username =
+          typeof token.username === "string" ? token.username : undefined;
+
+        if (typeof token.name === "string") {
+          session.user.name = token.name;
+        }
+
+        if (typeof token.email === "string") {
+          session.user.email = token.email;
+        }
       }
 
       return session;

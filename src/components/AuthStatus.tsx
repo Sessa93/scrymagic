@@ -29,11 +29,20 @@ export default function AuthStatus() {
     );
   }
 
-  const userLabel = data.user.name ?? data.user.email ?? "Signed in";
+  const userLabel =
+    data.user.username ?? data.user.name ?? data.user.email ?? "your account";
 
   return (
     <div className="ml-auto flex items-center gap-3">
-      <span className="text-sm text-muted">{userLabel}</span>
+      <span className="text-sm text-muted">
+        Logged in as{" "}
+        <Link
+          href="/account"
+          className="font-semibold text-accent underline decoration-accent/60 underline-offset-4 transition-colors hover:text-accent-hover"
+        >
+          {userLabel}
+        </Link>
+      </span>
       <button
         type="button"
         onClick={() => signOut({ callbackUrl: "/" })}
