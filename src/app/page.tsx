@@ -4,11 +4,25 @@ import { Suspense } from "react";
 import Sidebar from "@/components/Sidebar";
 import SearchBox from "@/components/SearchBox";
 import CardGrid from "@/components/CardGrid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { prisma } from "@/lib/prisma";
+import {
+  getOracleRecommendations,
+  getVisualRecommendations,
+  type RecommendedCard,
+} from "@/lib/recommender";
+import { getCachedCardById } from "@/lib/scryfall-server";
 
 export default async function Home() {
-  const [sets, randomCards] = await Promise.all([
+  const session = await getServerSession(authOptions);
+
+  const [sets, randomCards, wishlistRecommendations] = await Promise.all([
     getAllSets(),
     getRandomCards(7),
+    session?.user?.id
+      ? getWishlistRecommendationsForUser(session.user.id)
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -39,8 +53,22 @@ export default async function Home() {
           </div>
         </div>
 
+        {wishlistRecommendations.length > 0 ? (
+          <div className="mt-20 w-full max-w-7xl border-t border-card-border/40 pt-10">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+              Based on your wishlist...
+            </h2>
+            <CardGrid cards={wishlistRecommendations} />
+          </div>
+        ) : null}
+
         {randomCards.length > 0 ? (
-          <div className="mt-24 w-full max-w-7xl border-t border-card-border/40 pt-10">
+          <div
+            className={`${wishlistRecommendations.length > 0 ? "mt-14" : "mt-34"} w-full max-w-7xl border-t border-card-border/40 pt-10`}
+          >
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+              You might also like...
+            </h2>
             <CardGrid cards={randomCards} />
           </div>
         ) : null}
@@ -73,4 +101,210 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-sm text-muted">{label}</div>
     </div>
   );
+}
+
+async function getWishlistRecommendationsForUser(
+  userId: string,
+): Promise<ScryfallCard[]> {
+  const TARGET_RECOMMENDATIONS = 7;
+  const INITIAL_SEED_SAMPLE_SIZE = 10;
+  const MAX_REFILL_ATTEMPTS = 24;
+
+  const wishlistItems = await prisma.wishlistItem.findMany({
+    where: { userId },
+    select: { cardId: true },
+  });
+
+  if (!wishlistItems.length) {
+    return [];
+  }
+
+  const sampledWishlistCardIds = sampleRandom(
+    wishlistItems.map((item) => item.cardId),
+    INITIAL_SEED_SAMPLE_SIZE,
+  );
+
+  const sampledCards = await Promise.all(
+    sampledWishlistCardIds.map((cardId) =>
+      getCachedCardById(cardId).catch(() => null),
+    ),
+  );
+
+  const validCards = sampledCards.filter((card): card is ScryfallCard =>
+    Boolean(card),
+  );
+
+  if (!validCards.length) {
+    return [];
+  }
+
+  const recommendationBatches = await Promise.all(
+    validCards.map(async (card) => {
+      const oracleQuery = getOracleQuery(card);
+
+      const [visual, oracle] = await Promise.all([
+        getVisualRecommendations(card.id, 1).catch(() => []),
+        oracleQuery
+          ? getOracleRecommendations(oracleQuery, card.id, 1).catch(() => [])
+          : Promise.resolve([]),
+      ]);
+
+      return [
+        visual.find((candidate) => candidate.card_id !== card.id),
+        oracle.find((candidate) => candidate.card_id !== card.id),
+      ].filter((candidate): candidate is RecommendedCard => Boolean(candidate));
+    }),
+  );
+
+  const candidatePool = recommendationBatches.flat();
+  if (!candidatePool.length) {
+    return [];
+  }
+
+  const recommendationMap = new Map<string, RecommendedCard>(
+    candidatePool.map((candidate) => [candidate.card_id, candidate]),
+  );
+
+  let refillAttempts = 0;
+  while (
+    recommendationMap.size < TARGET_RECOMMENDATIONS &&
+    refillAttempts < MAX_REFILL_ATTEMPTS
+  ) {
+    refillAttempts += 1;
+
+    const seedCardId = pickRandom(wishlistItems.map((item) => item.cardId));
+
+    if (!seedCardId) {
+      break;
+    }
+
+    const seedCard = await getCachedCardById(seedCardId).catch(() => null);
+    if (!seedCard) {
+      continue;
+    }
+
+    const oracleQuery = getOracleQuery(seedCard);
+    const [visual, oracle] = await Promise.all([
+      getVisualRecommendations(seedCard.id, 1).catch(() => []),
+      oracleQuery
+        ? getOracleRecommendations(oracleQuery, seedCard.id, 1).catch(() => [])
+        : Promise.resolve([]),
+    ]);
+
+    const refillCandidate =
+      visual.find(
+        (candidate) =>
+          candidate.card_id !== seedCard.id &&
+          !recommendationMap.has(candidate.card_id),
+      ) ??
+      oracle.find(
+        (candidate) =>
+          candidate.card_id !== seedCard.id &&
+          !recommendationMap.has(candidate.card_id),
+      );
+
+    if (refillCandidate) {
+      recommendationMap.set(refillCandidate.card_id, refillCandidate);
+    }
+  }
+
+  const sampledRecommendations = sampleRandom(
+    Array.from(recommendationMap.values()),
+    TARGET_RECOMMENDATIONS,
+  );
+
+  const initialRecommendedCards = await Promise.all(
+    sampledRecommendations.map((candidate) =>
+      getCachedCardById(candidate.card_id).catch(() => null),
+    ),
+  );
+
+  const uniqueCards = new Map<string, ScryfallCard>();
+  for (const card of initialRecommendedCards) {
+    if (!card) {
+      continue;
+    }
+    uniqueCards.set(card.id, card);
+  }
+
+  let finalFillAttempts = 0;
+  const MAX_FINAL_FILL_ATTEMPTS = 30;
+  while (
+    uniqueCards.size < TARGET_RECOMMENDATIONS &&
+    finalFillAttempts < MAX_FINAL_FILL_ATTEMPTS
+  ) {
+    finalFillAttempts += 1;
+
+    const seedCardId = pickRandom(wishlistItems.map((item) => item.cardId));
+    if (!seedCardId) {
+      break;
+    }
+
+    const seedCard = await getCachedCardById(seedCardId).catch(() => null);
+    if (!seedCard) {
+      continue;
+    }
+
+    const oracleQuery = getOracleQuery(seedCard);
+    const [visual, oracle] = await Promise.all([
+      getVisualRecommendations(seedCard.id, 1).catch(() => []),
+      oracleQuery
+        ? getOracleRecommendations(oracleQuery, seedCard.id, 1).catch(() => [])
+        : Promise.resolve([]),
+    ]);
+
+    const refillCandidate =
+      visual.find((candidate) => candidate.card_id !== seedCard.id) ??
+      oracle.find((candidate) => candidate.card_id !== seedCard.id);
+
+    if (!refillCandidate || uniqueCards.has(refillCandidate.card_id)) {
+      continue;
+    }
+
+    const resolvedCard = await getCachedCardById(refillCandidate.card_id).catch(
+      () => null,
+    );
+
+    if (resolvedCard) {
+      uniqueCards.set(resolvedCard.id, resolvedCard);
+    }
+  }
+
+  return Array.from(uniqueCards.values()).slice(0, TARGET_RECOMMENDATIONS);
+}
+
+function getOracleQuery(card: ScryfallCard): string | null {
+  const oracleText =
+    card.oracle_text ||
+    card.card_faces
+      ?.map((face) => face.oracle_text)
+      .filter(Boolean)
+      .join("\n\n") ||
+    "";
+
+  const query = oracleText.trim();
+  return query.length > 0 ? query : null;
+}
+
+function sampleRandom<T>(items: T[], count: number): T[] {
+  if (!items.length || count <= 0) {
+    return [];
+  }
+
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[i]];
+  }
+
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+function pickRandom<T>(items: T[]): T | null {
+  if (!items.length) {
+    return null;
+  }
+
+  const randomIndex = Math.floor(Math.random() * items.length);
+  return items[randomIndex] ?? null;
 }

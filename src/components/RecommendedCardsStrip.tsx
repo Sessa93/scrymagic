@@ -29,7 +29,7 @@ export default function RecommendedCardsStrip({
     <div className={`relative overflow-visible ${activeCard ? "z-130" : ""}`}>
       <div className="rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
         <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-          {title} ({cards.length}/5)
+          {title} ({cards.length})
         </h2>
 
         {cards.length > 0 ? (
