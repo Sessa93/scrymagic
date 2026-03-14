@@ -234,9 +234,30 @@ export default async function CardPage({ params }: CardPageProps) {
           {/* Header */}
           <div>
             <div className="flex flex-wrap items-start gap-3">
-              <h1 className="text-3xl font-bold text-foreground">
-                <ScryfallText text={card.name} symbols={symbolDictionary} />
-              </h1>
+              <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
+                <h1 className="text-3xl font-bold text-foreground">
+                  <ScryfallText text={card.name} symbols={symbolDictionary} />
+                </h1>
+                <WishlistToggleButton
+                  initialInWishlist={inWishlist}
+                  isAuthenticated={Boolean(session?.user?.id)}
+                  payload={{
+                    cardId: card.id,
+                    name: card.name,
+                    setCode: card.set,
+                    setName: card.set_name,
+                    typeLine,
+                    colorIdentity: card.color_identity ?? [],
+                    imageUrl: getCardImage(card, "normal") || undefined,
+                    scryfallUri: card.scryfall_uri,
+                    cmc: card.cmc,
+                    usd: card.prices?.usd ?? undefined,
+                    usdFoil: card.prices?.usd_foil ?? undefined,
+                    eur: card.prices?.eur ?? undefined,
+                    tix: card.prices?.tix ?? undefined,
+                  }}
+                />
+              </div>
               {manaSymbols.length > 0 && (
                 <div className="flex items-center gap-0.5 pt-1.5">
                   {manaSymbols.map((sym, i) => (
@@ -250,27 +271,6 @@ export default async function CardPage({ params }: CardPageProps) {
                   ))}
                 </div>
               )}
-            </div>
-            <div className="mt-3">
-              <WishlistToggleButton
-                initialInWishlist={inWishlist}
-                isAuthenticated={Boolean(session?.user?.id)}
-                payload={{
-                  cardId: card.id,
-                  name: card.name,
-                  setCode: card.set,
-                  setName: card.set_name,
-                  typeLine,
-                  colorIdentity: card.color_identity ?? [],
-                  imageUrl: getCardImage(card, "normal") || undefined,
-                  scryfallUri: card.scryfall_uri,
-                  cmc: card.cmc,
-                  usd: card.prices?.usd ?? undefined,
-                  usdFoil: card.prices?.usd_foil ?? undefined,
-                  eur: card.prices?.eur ?? undefined,
-                  tix: card.prices?.tix ?? undefined,
-                }}
-              />
             </div>
             <p className="mt-1 text-lg text-muted">
               <ScryfallText text={typeLine} symbols={symbolDictionary} />

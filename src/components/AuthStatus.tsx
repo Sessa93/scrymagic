@@ -43,12 +43,6 @@ export default function AuthStatus() {
           {userLabel}
         </Link>
       </span>
-      <Link
-        href="/wishlist"
-        className="rounded-lg border border-input-border px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent hover:text-accent"
-      >
-        Wishlist
-      </Link>
       <button
         type="button"
         onClick={() => signOut({ callbackUrl: "/" })}

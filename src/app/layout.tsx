@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Cinzel_Decorative } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import HeaderMenuBar from "@/components/HeaderMenuBar";
 import AuthProvider from "@/components/AuthProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -42,6 +43,7 @@ export default async function RootLayout({
       >
         <AuthProvider session={session}>
           <Header />
+          <HeaderMenuBar />
           <main>{children}</main>
         </AuthProvider>
       </body>
