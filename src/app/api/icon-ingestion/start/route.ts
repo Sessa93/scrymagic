@@ -8,8 +8,18 @@ import {
   setActiveIconIngestionJobId,
   type IconIngestionJob,
 } from "@/lib/icon-ingestion-jobs";
+import { requireAdmin } from "@/lib/authz";
 
 export async function POST(): Promise<NextResponse> {
+  try {
+    await requireAdmin();
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   if (activeIconIngestionJobId) {
     const existing = iconIngestionJobs.get(activeIconIngestionJobId);
     if (existing?.status === "running") {

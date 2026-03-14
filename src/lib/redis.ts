@@ -1,12 +1,14 @@
 import "server-only";
 
-import { createClient, type RedisClientType } from "redis";
+import { createClient } from "redis";
 
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 
+type AppRedisClient = ReturnType<typeof createClient>;
+
 declare global {
-  var redisClient: RedisClientType | undefined;
-  var redisClientPromise: Promise<RedisClientType> | undefined;
+  var redisClient: AppRedisClient | undefined;
+  var redisClientPromise: Promise<AppRedisClient> | undefined;
   var redisWarningLogged: boolean | undefined;
 }
 
@@ -22,7 +24,7 @@ function logRedisWarning(error: unknown) {
   );
 }
 
-async function getRedisClient(): Promise<RedisClientType> {
+async function getRedisClient(): Promise<AppRedisClient> {
   if (globalThis.redisClient?.isOpen) {
     return globalThis.redisClient;
   }

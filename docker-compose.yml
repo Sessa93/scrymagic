@@ -11,8 +11,21 @@ services:
       OPENAI_MODEL: gpt-4o
       REDIS_URL: redis://redis:6379
       RECOMMENDER_API_BASE_URL: http://recommender:3001
+      DATABASE_URL: postgres://webapp:webapp@webapp-db:5432/scrymagic_webapp
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-replace_with_a_long_random_value}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      AUTH_APPLE_ID: ${AUTH_APPLE_ID:-}
+      AUTH_APPLE_SECRET: ${AUTH_APPLE_SECRET:-}
+      AUTH_MICROSOFT_ENTRA_ID_ID: ${AUTH_MICROSOFT_ENTRA_ID_ID:-}
+      AUTH_MICROSOFT_ENTRA_ID_SECRET: ${AUTH_MICROSOFT_ENTRA_ID_SECRET:-}
+      AUTH_MICROSOFT_ENTRA_ID_TENANT_ID: ${AUTH_MICROSOFT_ENTRA_ID_TENANT_ID:-}
     volumes:
       - nextjs-image-cache:/app/.next/cache/images
+    depends_on:
+      webapp-db:
+        condition: service_healthy
 
   recommender:
     build:
@@ -102,9 +115,27 @@ services:
       timeout: 5s
       retries: 5
 
+  webapp-db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scrymagic_webapp
+      POSTGRES_USER: webapp
+      POSTGRES_PASSWORD: webapp
+    ports:
+      - 5435:5432
+    volumes:
+      - webapp_pgdata_pg18:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webapp -d scrymagic_webapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   redis-data:
   redis-insight-data:
   recommender_pgdata_pg18:
   scheduler_pgdata_pg18:
+  webapp_pgdata_pg18:
   nextjs-image-cache:

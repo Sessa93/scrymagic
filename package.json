@@ -7,14 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pull-rarity-icons": "node scripts/pull-rarity-icons.mjs"
+    "pull-rarity-icons": "node scripts/pull-rarity-icons.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "^6.19.2",
+    "argon2": "^0.44.0",
     "next": "16.1.6",
+    "next-auth": "^4.24.13",
     "openai": "^6.27.0",
+    "prisma": "^6.19.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "redis": "^5.11.0"
+    "redis": "^5.11.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

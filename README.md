@@ -53,9 +53,39 @@ Create a `.env.local` file in the project root.
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key
+DATABASE_URL=postgres://webapp:webapp@127.0.0.1:5435/scrymagic_webapp
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=replace_with_a_long_random_value
+
+# Optional OAuth providers
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+AUTH_APPLE_ID=
+AUTH_APPLE_SECRET=
+AUTH_MICROSOFT_ENTRA_ID_ID=
+AUTH_MICROSOFT_ENTRA_ID_SECRET=
+AUTH_MICROSOFT_ENTRA_ID_TENANT_ID=
 ```
 
 `OPENAI_API_KEY` is optional for the core app, but it is required if you want plain-English search terms such as `red dragons with flying` to be translated into Scryfall syntax automatically. Without it, direct Scryfall syntax searches still work.
+
+`DATABASE_URL`, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET` are required for account registration/login. OAuth provider variables are optional and can be enabled one-by-one.
+
+### Initialize database schema
+
+```bash
+npm run db:push
+```
+
+### Promote an admin user
+
+The icon ingestion endpoints are restricted to `ADMIN` users.
+
+```bash
+npx prisma studio
+```
+
+Open the `User` table and set `role` to `ADMIN` for the account that should manage icon ingestion jobs.
 
 ### Run the app
 
@@ -83,6 +113,9 @@ The app will be available at <http://localhost:3000>.
 - `npm run build` creates a production build
 - `npm run start` runs the production server
 - `npm run lint` runs ESLint
+- `npm run db:generate` generates the Prisma client
+- `npm run db:migrate` creates and applies local Prisma migrations
+- `npm run db:push` pushes the schema directly to the configured database
 
 ## Routes
 
@@ -91,6 +124,9 @@ The app will be available at <http://localhost:3000>.
 - `/card/[id]` detailed card page
 - `/set/[code]` set page with set metadata and card listings
 - `/api/translate-query` API route that translates natural language into Scryfall syntax
+- `/auth/signin` custom sign in page (credentials + configured OAuth providers)
+- `/auth/register` custom account registration page
+- `/api/auth/*` NextAuth endpoints
 
 ## Search Behavior
 

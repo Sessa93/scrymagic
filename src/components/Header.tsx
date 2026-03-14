@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import AuthStatus from "@/components/AuthStatus";
 
 export default function Header() {
   const router = useRouter();
@@ -73,6 +74,7 @@ export default function Header() {
             </button>
           </form>
         ) : null}
+        <AuthStatus />
       </div>
     </header>
   );

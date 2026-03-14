@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@prisma/client", "prisma"],
   images: {
     dangerouslyAllowSVG: true,
     minimumCacheTTL: 2_592_000, // 30 days

@@ -17,6 +17,8 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN bunx prisma generate
+
 RUN bun run build
 
 FROM oven/bun:1-alpine AS runner
