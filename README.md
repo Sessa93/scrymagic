@@ -51,6 +51,12 @@ npm install
 
 Create a `.env.local` file in the project root.
 
+You can start from:
+
+```bash
+cp .env.example .env.local
+```
+
 ```bash
 OPENAI_API_KEY=your_openai_api_key
 DATABASE_URL=postgres://webapp:webapp@127.0.0.1:5435/scrymagic_webapp
@@ -74,7 +80,7 @@ AUTH_MICROSOFT_ENTRA_ID_TENANT_ID=
 ### Initialize database schema
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
 ### Promote an admin user
@@ -86,6 +92,25 @@ npx prisma studio
 ```
 
 Open the `User` table and set `role` to `ADMIN` for the account that should manage icon ingestion jobs.
+
+### OAuth callback URLs
+
+Configure each provider with this callback URL:
+
+- Google: `http://localhost:3000/api/auth/callback/google`
+- Apple: `http://localhost:3000/api/auth/callback/apple`
+- Microsoft (Azure AD): `http://localhost:3000/api/auth/callback/azure-ad`
+
+In production, replace `http://localhost:3000` with your public webapp base URL.
+
+### OAuth smoke test checklist
+
+1. Ensure the provider env vars are set.
+2. Start the app and open `/auth/signin`.
+3. Confirm the provider button appears.
+4. Complete provider login and verify redirect back to `/`.
+5. Verify a linked account row exists in the `Account` table.
+6. Sign out and sign in again with the same provider to verify account linking.
 
 ### Run the app
 

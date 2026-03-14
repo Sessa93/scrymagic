@@ -7,6 +7,11 @@ import AzureADProvider from "next-auth/providers/azure-ad";
 import { z } from "zod";
 import { verify } from "argon2";
 import { prisma } from "@/lib/prisma";
+import {
+  clearRateLimit,
+  consumeRateLimit,
+  extractClientIp,
+} from "@/lib/rate-limit";
 
 const credentialsSchema = z.object({
   usernameOrEmail: z.string().trim().min(1),
@@ -27,13 +32,36 @@ const providers: NextAuthOptions["providers"] = [
         type: "password",
       },
     },
-    async authorize(rawCredentials) {
+    async authorize(rawCredentials, request) {
       const parsed = credentialsSchema.safeParse(rawCredentials);
       if (!parsed.success) {
         return null;
       }
 
       const identifier = parsed.data.usernameOrEmail;
+      const ip = extractClientIp(
+        request?.headers as Record<string, string | string[] | undefined>,
+      );
+
+      const [ipLimit, identifierLimit] = await Promise.all([
+        consumeRateLimit({
+          scope: "auth:login:ip",
+          identifier: ip,
+          limit: 15,
+          windowSeconds: 600,
+        }),
+        consumeRateLimit({
+          scope: "auth:login:identifier",
+          identifier,
+          limit: 10,
+          windowSeconds: 600,
+        }),
+      ]);
+
+      if (!ipLimit.allowed || !identifierLimit.allowed) {
+        return null;
+      }
+
       const user = await prisma.user.findFirst({
         where: identifier.includes("@")
           ? { email: identifier.toLowerCase() }
@@ -51,6 +79,11 @@ const providers: NextAuthOptions["providers"] = [
       if (!passwordMatches) {
         return null;
       }
+
+      await Promise.all([
+        clearRateLimit("auth:login:ip", ip),
+        clearRateLimit("auth:login:identifier", identifier),
+      ]);
 
       return {
         id: user.id,

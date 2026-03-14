@@ -83,3 +83,34 @@ export async function setJsonInRedis<T>(
     logRedisWarning(error);
   }
 }
+
+export async function incrementInRedis(
+  key: string,
+  ttlSeconds: number,
+): Promise<{ value: number; ttlSeconds: number } | null> {
+  try {
+    const client = await getRedisClient();
+    const value = await client.incr(key);
+    if (value === 1) {
+      await client.expire(key, ttlSeconds);
+    }
+
+    const ttl = await client.ttl(key);
+    return {
+      value,
+      ttlSeconds: ttl > 0 ? ttl : ttlSeconds,
+    };
+  } catch (error) {
+    logRedisWarning(error);
+    return null;
+  }
+}
+
+export async function deleteRedisKey(key: string): Promise<void> {
+  try {
+    const client = await getRedisClient();
+    await client.del(key);
+  } catch (error) {
+    logRedisWarning(error);
+  }
+}

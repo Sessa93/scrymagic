@@ -3,6 +3,7 @@ import { hash } from "argon2";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { consumeRateLimit, extractClientIp } from "@/lib/rate-limit";
 
 const registrationSchema = z.object({
   username: z
@@ -25,6 +26,24 @@ const registrationSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const ip = extractClientIp(request.headers);
+  const ipLimit = await consumeRateLimit({
+    scope: "auth:register:ip",
+    identifier: ip,
+    limit: 5,
+    windowSeconds: 600,
+  });
+
+  if (!ipLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many registration attempts from this address. Please try again later.",
+        retryAfterSeconds: ipLimit.retryAfterSeconds,
+      },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
 
   try {
@@ -48,6 +67,23 @@ export async function POST(request: Request) {
   }
 
   const { username, email, password } = parsed.data;
+
+  const emailLimit = await consumeRateLimit({
+    scope: "auth:register:email",
+    identifier: email,
+    limit: 3,
+    windowSeconds: 600,
+  });
+
+  if (!emailLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many registration attempts for this email. Please try again later.",
+        retryAfterSeconds: emailLimit.retryAfterSeconds,
+      },
+      { status: 429 },
+    );
+  }
 
   try {
     const passwordHash = await hash(password, {
