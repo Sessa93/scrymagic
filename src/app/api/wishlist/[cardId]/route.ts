@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { invalidateWishlistRecommendationsCache } from "@/lib/wishlist-recommendations-cache";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,6 +26,8 @@ export async function DELETE(
       cardId,
     },
   });
+
+  await invalidateWishlistRecommendationsCache(session.user.id);
 
   return NextResponse.json({ removed: true });
 }

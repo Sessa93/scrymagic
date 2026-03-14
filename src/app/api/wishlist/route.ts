@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { invalidateWishlistRecommendationsCache } from "@/lib/wishlist-recommendations-cache";
 import { z } from "zod";
 
 const MAX_WISHLIST_ITEMS = 1000;
@@ -120,6 +121,8 @@ export async function POST(request: Request) {
       tix: input.tix,
     },
   });
+
+  await invalidateWishlistRecommendationsCache(session.user.id);
 
   return NextResponse.json({ item, created: true }, { status: 201 });
 }

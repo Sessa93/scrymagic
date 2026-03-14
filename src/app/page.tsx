@@ -13,17 +13,13 @@ import {
   type RecommendedCard,
 } from "@/lib/recommender";
 import { getCachedCardById } from "@/lib/scryfall-server";
+import {
+  getCachedWishlistRecommendations,
+  setCachedWishlistRecommendations,
+} from "@/lib/wishlist-recommendations-cache";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-
-  const [sets, randomCards, wishlistRecommendations] = await Promise.all([
-    getAllSets(),
-    getRandomCards(7),
-    session?.user?.id
-      ? getWishlistRecommendationsForUser(session.user.id)
-      : Promise.resolve([]),
-  ]);
+  const sets = await getAllSets();
 
   return (
     <div className="flex min-h-[calc(100vh-57px)]">
@@ -53,26 +49,58 @@ export default async function Home() {
           </div>
         </div>
 
-        {wishlistRecommendations.length > 0 ? (
-          <div className="mt-20 w-full max-w-7xl border-t border-card-border/40 pt-10">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
-              Based on your wishlist...
-            </h2>
-            <CardGrid cards={wishlistRecommendations} />
-          </div>
-        ) : null}
+        <Suspense fallback={null}>
+          <WishlistRecommendationsSection />
+        </Suspense>
 
-        {randomCards.length > 0 ? (
-          <div
-            className={`${wishlistRecommendations.length > 0 ? "mt-14" : "mt-34"} w-full max-w-7xl border-t border-card-border/40 pt-10`}
-          >
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
-              You might also like...
-            </h2>
-            <CardGrid cards={randomCards} />
-          </div>
-        ) : null}
+        <Suspense
+          fallback={
+            <RecommendationSectionSkeleton
+              title="You might also like..."
+              className="mt-24"
+            />
+          }
+        >
+          <RandomRecommendationsSection />
+        </Suspense>
       </div>
+    </div>
+  );
+}
+
+async function WishlistRecommendationsSection() {
+  const session = await getServerSession(authOptions);
+  const wishlistRecommendations = session?.user?.id
+    ? await getWishlistRecommendationsForUser(session.user.id)
+    : [];
+
+  if (!wishlistRecommendations.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-20 w-full max-w-7xl border-t border-card-border/40 pt-10">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+        Based on your wishlist...
+      </h2>
+      <CardGrid cards={wishlistRecommendations} />
+    </div>
+  );
+}
+
+async function RandomRecommendationsSection() {
+  const randomCards = await getRandomCards(7);
+
+  if (!randomCards.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-24 w-full max-w-7xl border-t border-card-border/40 pt-10">
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+        You might also like...
+      </h2>
+      <CardGrid cards={randomCards} />
     </div>
   );
 }
@@ -103,9 +131,43 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+function RecommendationSectionSkeleton({
+  title,
+  className,
+}: {
+  title: string;
+  className: string;
+}) {
+  return (
+    <div
+      className={`${className} w-full max-w-7xl border-t border-card-border/40 pt-10`}
+    >
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+        {title}
+      </h2>
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+        {Array.from({ length: 7 }).map((_, index) => (
+          <div key={index} className="animate-pulse overflow-hidden rounded-lg">
+            <div className="aspect-488/680 w-full bg-surface" />
+            <div className="space-y-2 p-2">
+              <div className="h-3 rounded bg-surface" />
+              <div className="h-2.5 w-2/3 rounded bg-surface/80" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 async function getWishlistRecommendationsForUser(
   userId: string,
 ): Promise<ScryfallCard[]> {
+  const cachedRecommendations = await getCachedWishlistRecommendations(userId);
+  if (cachedRecommendations) {
+    return cachedRecommendations;
+  }
+
   const TARGET_RECOMMENDATIONS = 7;
   const INITIAL_SEED_SAMPLE_SIZE = 10;
   const MAX_REFILL_ATTEMPTS = 24;
@@ -270,7 +332,14 @@ async function getWishlistRecommendationsForUser(
     }
   }
 
-  return Array.from(uniqueCards.values()).slice(0, TARGET_RECOMMENDATIONS);
+  const recommendations = Array.from(uniqueCards.values()).slice(
+    0,
+    TARGET_RECOMMENDATIONS,
+  );
+
+  await setCachedWishlistRecommendations(userId, recommendations);
+
+  return recommendations;
 }
 
 function getOracleQuery(card: ScryfallCard): string | null {
