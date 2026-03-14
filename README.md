@@ -83,12 +83,14 @@ AUTH_MICROSOFT_ENTRA_ID_TENANT_ID=
 npm run db:migrate
 ```
 
+These Prisma scripts load environment variables from `.env.local`, so `DATABASE_URL` can stay in the same file used by Next.js.
+
 ### Promote an admin user
 
 The icon ingestion endpoints are restricted to `ADMIN` users.
 
 ```bash
-npx prisma studio
+npm run db:studio
 ```
 
 Open the `User` table and set `role` to `ADMIN` for the account that should manage icon ingestion jobs.

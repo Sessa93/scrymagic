@@ -37,7 +37,8 @@ export async function POST(request: Request) {
   if (!ipLimit.allowed) {
     return NextResponse.json(
       {
-        error: "Too many registration attempts from this address. Please try again later.",
+        error:
+          "Too many registration attempts from this address. Please try again later.",
         retryAfterSeconds: ipLimit.retryAfterSeconds,
       },
       { status: 429 },
@@ -78,7 +79,8 @@ export async function POST(request: Request) {
   if (!emailLimit.allowed) {
     return NextResponse.json(
       {
-        error: "Too many registration attempts for this email. Please try again later.",
+        error:
+          "Too many registration attempts for this email. Please try again later.",
         retryAfterSeconds: emailLimit.retryAfterSeconds,
       },
       { status: 429 },

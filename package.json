@@ -8,9 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "pull-rarity-icons": "node scripts/pull-rarity-icons.mjs",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push"
+    "db:generate": "set -a; [ -f .env.local ] && . ./.env.local; set +a; prisma generate",
+    "db:migrate": "set -a; [ -f .env.local ] && . ./.env.local; set +a; prisma migrate dev",
+    "db:push": "set -a; [ -f .env.local ] && . ./.env.local; set +a; prisma db push",
+    "db:studio": "set -a; [ -f .env.local ] && . ./.env.local; set +a; prisma studio"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

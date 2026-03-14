@@ -19,10 +19,16 @@ export type RateLimitResult = {
 };
 
 function sanitizeIdentifier(input: string): string {
-  return input.trim().toLowerCase().replace(/[^a-z0-9:_@.-]/g, "_");
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_@.-]/g, "_");
 }
 
-function readHeader(headers: HeaderMap | undefined, key: string): string | null {
+function readHeader(
+  headers: HeaderMap | undefined,
+  key: string,
+): string | null {
   if (!headers) {
     return null;
   }
@@ -84,7 +90,10 @@ export async function consumeRateLimit({
   };
 }
 
-export async function clearRateLimit(scope: string, identifier: string): Promise<void> {
+export async function clearRateLimit(
+  scope: string,
+  identifier: string,
+): Promise<void> {
   const key = buildRateLimitKey(scope, identifier);
   await deleteRedisKey(key);
 }
