@@ -152,6 +152,7 @@ The app will be available at <http://localhost:3000>.
 - `/set/[code]` set page with set metadata and card listings
 - `/api/translate-query` API route that translates natural language into Scryfall syntax
 - `/account` authenticated account details and profile editing page
+- `/wishlist` authenticated wishlist page with grouping and stats
 - `/auth/signin` custom sign in page (credentials + configured OAuth providers)
 - `/auth/register` custom account registration page
 - `/api/auth/*` NextAuth endpoints

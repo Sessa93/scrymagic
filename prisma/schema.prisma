@@ -23,6 +23,7 @@ model User {
   role          Role      @default(USER)
   accounts      Account[]
   sessions      Session[]
+  wishlistItems WishlistItem[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -63,4 +64,29 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+}
+
+model WishlistItem {
+  id            String   @id @default(cuid())
+  userId        String
+  cardId        String
+  name          String
+  setCode       String
+  setName       String
+  typeLine      String
+  colorIdentity String[]
+  imageUrl      String?
+  scryfallUri   String?
+  cmc           Float?
+  usd           String?
+  usdFoil       String?
+  eur           String?
+  tix           String?
+  addedAt       DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, addedAt])
 }

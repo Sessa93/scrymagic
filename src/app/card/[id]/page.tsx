@@ -21,7 +21,11 @@ import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
 import OtherPrintingsStrip from "@/components/OtherPrintingsStrip";
 import RecommendedCardsStrip from "@/components/RecommendedCardsStrip";
+import WishlistToggleButton from "@/components/WishlistToggleButton";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { prisma } from "@/lib/prisma";
 
 interface CardPageProps {
   params: Promise<{ id: string }>;
@@ -29,6 +33,8 @@ interface CardPageProps {
 
 export default async function CardPage({ params }: CardPageProps) {
   const { id } = await params;
+
+  const session = await getServerSession(authOptions);
 
   let card;
   try {
@@ -101,6 +107,20 @@ export default async function CardPage({ params }: CardPageProps) {
     card.type_line ||
     card.card_faces?.map((f) => f.type_line).join(" // ") ||
     "";
+
+  const inWishlist = session?.user?.id
+    ? Boolean(
+        await prisma.wishlistItem.findUnique({
+          where: {
+            userId_cardId: {
+              userId: session.user.id,
+              cardId: card.id,
+            },
+          },
+          select: { id: true },
+        }),
+      )
+    : false;
   const setHref = buildSearchHref(`set:${card.set}`);
   const artistHref = card.artist
     ? buildSearchHref(`a:"${card.artist.replaceAll('"', '\\"')}"`)
@@ -230,6 +250,27 @@ export default async function CardPage({ params }: CardPageProps) {
                   ))}
                 </div>
               )}
+            </div>
+            <div className="mt-3">
+              <WishlistToggleButton
+                initialInWishlist={inWishlist}
+                isAuthenticated={Boolean(session?.user?.id)}
+                payload={{
+                  cardId: card.id,
+                  name: card.name,
+                  setCode: card.set,
+                  setName: card.set_name,
+                  typeLine,
+                  colorIdentity: card.color_identity ?? [],
+                  imageUrl: getCardImage(card, "normal") || undefined,
+                  scryfallUri: card.scryfall_uri,
+                  cmc: card.cmc,
+                  usd: card.prices?.usd ?? undefined,
+                  usdFoil: card.prices?.usd_foil ?? undefined,
+                  eur: card.prices?.eur ?? undefined,
+                  tix: card.prices?.tix ?? undefined,
+                }}
+              />
             </div>
             <p className="mt-1 text-lg text-muted">
               <ScryfallText text={typeLine} symbols={symbolDictionary} />
