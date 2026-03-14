@@ -20,8 +20,10 @@ import ScryfallText, { buildSymbolDictionary } from "@/components/ScryfallText";
 import RarityBadge from "@/components/RarityBadge";
 import BackToResultsButton from "@/components/BackToResultsButton";
 import OtherPrintingsStrip from "@/components/OtherPrintingsStrip";
+import RelatedCardsStrip from "@/components/RelatedCardsStrip";
 import RecommendedCardsStrip from "@/components/RecommendedCardsStrip";
 import WishlistToggleButton from "@/components/WishlistToggleButton";
+import CardPageActionButtons from "@/components/CardPageActionButtons";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -53,6 +55,7 @@ export default async function CardPage({ params }: CardPageProps) {
 
   let alternatePrints: ScryfallCard[] = [];
   let localizedPrints: ScryfallCard[] = [];
+  let relatedCards: ScryfallCard[] = [];
   try {
     if (card.prints_search_uri) {
       // Build a separate URL for localizations: same oracle ID, same set, any language.
@@ -77,9 +80,33 @@ export default async function CardPage({ params }: CardPageProps) {
     // Prints may not be available
   }
 
+  try {
+    const relatedIds = Array.from(
+      new Set(
+        (card.all_parts ?? [])
+          .map((part) => part.id)
+          .filter((relatedId) => relatedId && relatedId !== card.id),
+      ),
+    );
+
+    if (relatedIds.length > 0) {
+      const relatedResults = await Promise.all(
+        relatedIds.map((relatedId) =>
+          getCachedCardById(relatedId).catch(() => null),
+        ),
+      );
+      relatedCards = relatedResults.filter(
+        (relatedCard): relatedCard is ScryfallCard => Boolean(relatedCard),
+      );
+    }
+  } catch {
+    // Related cards may not be available
+  }
+
   const symbolDictionary = buildSymbolDictionary(await getCardSymbols());
 
   const imageUrl = getCardImage(card, "png");
+  const illustrationUrl = getCardImage(card, "art_crop") || null;
   const manaSymbols = formatManaCost(card.mana_cost);
 
   // Get oracle text from main card or first face
@@ -126,6 +153,8 @@ export default async function CardPage({ params }: CardPageProps) {
     ? buildSearchHref(`a:"${card.artist.replaceAll('"', '\\"')}"`)
     : null;
   const legalityGroups = getLegalityGroups(card.legalities);
+  const purchaseLinks = getPurchaseLinks(card.purchase_uris);
+  const illustrationFileName = `${sanitizeFileName(card.name)}-illustration.jpg`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -227,6 +256,22 @@ export default async function CardPage({ params }: CardPageProps) {
           >
             View on Scryfall &rarr;
           </a>
+
+          {purchaseLinks.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+              {purchaseLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted transition-colors hover:text-accent"
+                >
+                  Buy on {link.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {/* Card Details */}
@@ -256,6 +301,11 @@ export default async function CardPage({ params }: CardPageProps) {
                     eur: card.prices?.eur ?? undefined,
                     tix: card.prices?.tix ?? undefined,
                   }}
+                />
+                <CardPageActionButtons
+                  illustrationUrl={illustrationUrl}
+                  illustrationFileName={illustrationFileName}
+                  canDownloadIllustration={Boolean(session?.user?.id)}
                 />
               </div>
               {manaSymbols.length > 0 && (
@@ -449,11 +499,20 @@ export default async function CardPage({ params }: CardPageProps) {
           )}
 
           {alternatePrints.length > 0 && (
-            <div className="relative overflow-visible rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
+            <div className="relative z-40 overflow-visible rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
               <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
                 Other Printings ({alternatePrints.length})
               </h2>
               <OtherPrintingsStrip prints={alternatePrints} />
+            </div>
+          )}
+
+          {relatedCards.length > 0 && (
+            <div className="relative z-30 overflow-visible rounded-xl border border-card-border bg-card-bg/80 p-3 backdrop-blur-sm">
+              <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Related Cards ({relatedCards.length})
+              </h2>
+              <RelatedCardsStrip cards={relatedCards} />
             </div>
           )}
 
@@ -604,4 +663,40 @@ function getLanguageLabel(langCode?: string): string {
   }
 
   return labelByCode[langCode] || langCode.toUpperCase();
+}
+
+function getPurchaseLinks(purchaseUris?: Record<string, string | null>) {
+  if (!purchaseUris) {
+    return [];
+  }
+
+  const purchaseLabels: Record<string, string> = {
+    tcgplayer: "TCGplayer",
+    cardmarket: "Cardmarket",
+    cardhoarder: "Cardhoarder",
+    card_trader: "CardTrader",
+    tcgplayer_infinite_articles: "TCGplayer Infinite",
+    tcgplayer_infinite_decks: "TCGplayer Infinite Decks",
+    mtgo_traders: "MTGO Traders",
+  };
+
+  return Object.entries(purchaseUris)
+    .filter(([, href]) => Boolean(href))
+    .map(([market, href]) => ({
+      label:
+        purchaseLabels[market] ??
+        market
+          .split("_")
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(" "),
+      href: href as string,
+    }));
+}
+
+function sanitizeFileName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }

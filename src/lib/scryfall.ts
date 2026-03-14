@@ -49,6 +49,14 @@ export interface ScryfallCard {
   released_at?: string;
   scryfall_uri: string;
   rulings_uri: string;
+  purchase_uris?: Record<string, string | null>;
+  all_parts?: Array<{
+    id: string;
+    component: string;
+    name: string;
+    type_line?: string;
+    uri: string;
+  }>;
   flavor_text?: string;
   keywords?: string[];
   collector_number?: string;
